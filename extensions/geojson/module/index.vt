@@ -1,0 +1,30 @@
+#*
+ * Access this page at the URL /extension/geojson/
+ *#
+<html>
+  <head>
+    <title>GeoJSON Extension</title>
+  </head>
+  <body>
+    <h1>GeoJSON Extension</h1>
+    
+    <p>If an extension needs its own page, then this is such an example.
+      However, mostly, extensions only need to inject their own scripts
+      and styles into the /project page.
+    </p>
+    
+    <p>Here is someString: $someString</p>
+
+    <p> Here are two numbers: $someNumber1 and $someNumber2 </p>
+
+    <p>Sum of the numbers: $sumNumbers </p>
+    <p>Difference of the numbers: $diffNumbers </p>
+    <p>Multiplication of the numbers: $multiplyNumbers </p>
+    <p>Division of the numbers: $divideNumbers </p>
+    
+    <p>Here is a sample list using a veloci-macro:</p>
+    
+    #set( $greatlakes = ["Superior","Michigan","Huron","Erie","Ontario"] )
+    #makeAList( $greatlakes )
+  </body>
+</html>

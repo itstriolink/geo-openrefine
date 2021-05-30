@@ -24,7 +24,7 @@
         <module>gdata</module>
         <module>pc-axis</module>
         <module>phonetic</module>
-        <!-- Add new extensions here -->
+        <module>geojson</module>
   </modules>
 
   <build>
