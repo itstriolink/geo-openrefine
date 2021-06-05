@@ -1,4 +1,6 @@
 {
   "geojson/sample-string": "Test String",
-  "geojson/generate-random-number": "Generate Random Number"
+  "geojson/generate-random-number": "Generate Random Number",
+  "geojson/export-to-geojson": "GeoJSON (.geojson)",
+  "geojson/enter-file-name": "Enter a name for the GeoJSON file"
 }

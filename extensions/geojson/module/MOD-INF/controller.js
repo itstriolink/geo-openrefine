@@ -35,17 +35,20 @@ var html = "text/html";
 var encoding = "UTF-8";
 var ClientSideResourceManager = Packages.com.google.refine.ClientSideResourceManager;
 
-function registerFunctions() {
-  Packages.java.lang.System.out.print("Registering GeoJSON utilities functions...");
-  const FR = com.google.refine.grel.ControlFunctionRegistry;
-  FR.registerFunction("randomNumber", new com.google.refine.geojson.grel.RandomNumber());
+function registerExporters() {
+  Packages.java.lang.System.out.println("Registering the GeoJSON exporter...");
+  var ExporterRegistry = Packages.com.google.refine.exporters.ExporterRegistry;
+  var GeoJSONExporter = Packages.com.google.refine.geojson.exporters.GeoJSONExporter;
+
+  ExporterRegistry.registerExporter("geojson", new GeoJSONExporter());
+
+  Packages.java.lang.System.out.println("GeoJSON exporter registered successfully.");
 }
 
 function registerCommands() {
-
   Packages.java.lang.System.out.println("Initializing GeoJSON commands...");
   var RefineServlet = Packages.com.google.refine.RefineServlet;
-  RefineServlet.registerCommand(module, "generate-random-number", new Packages.com.google.refine.geojson.commands.GenerateRandomNumber());
+  RefineServlet.registerCommand(module, "export-to-geojson", new Packages.com.google.refine.geojson.commands.ExportGeoJSONCommand());
   Packages.java.lang.System.out.println("Finished initializing GeoJSON commands.");
 }
 /*
@@ -53,7 +56,7 @@ function registerCommands() {
  */
 
 function init() {
-  Packages.java.lang.System.out.println("Initializing GeoJSON utilities...");
+  Packages.java.lang.System.out.println("Initializing GeoJSON extension...");
   Packages.java.lang.System.out.println(module.getMountPoint());
 
   // Script files to inject into /project page
@@ -61,7 +64,7 @@ function init() {
     "project/scripts",
     module,
     [
-      "scripts/project-injection.js"
+      "scripts/exporter.js"
     ]
   );
 
@@ -74,8 +77,8 @@ function init() {
     ]
   );
 
-  registerFunctions();
   registerCommands();
+  registerExporters();
 }
 
 /*
