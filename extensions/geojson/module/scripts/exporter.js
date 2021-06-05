@@ -45,40 +45,15 @@ $.ajax({
     }
 });
 $.i18n().load(dictionary, lang);
-// DataTableColumnHeaderUI.extendMenu((column, columnHeaderUI, menu) => {
-//     MenuSystem.appendTo(menu, ["core/edit-cells"], [
-//         {
-//             id: "geojson/sample-button",
-//             label: $.i18n('geojson/generate-random-number') + "...",
-//             click: function () {
-//                 Refine.wrapCSRF(function (token) {
-//                     $.post(
-//                         "command/geojson/generate-random-number?" + $.param({
-//                             "numberA": 1,
-//                             "numberB": 10,
-//                             "csrf_token": token
-//                         }),
-//                         null,
-//                         function (o) {
-//                             window.alert(o);
-//                         },
-//                         "json"
-//                     );
-//                 });
-//             }
-//         }
-//     ]);
-// });
+const menuIndex = ExporterManager.MenuItems.findIndex(i => i.id === "core/export-ods");
 
-ExporterManager.MenuItems.push({});
-ExporterManager.MenuItems.push(
-    {
-        "id": "export-to-geojson",
-        "label": $.i18n('geojson/export-to-geojson'),
-        "click": function () {
-            ExporterManager.handlers.exportRows("geojson", "geojson");
-        }
-    });
+ExporterManager.MenuItems.splice(menuIndex, 0, {
+    "id": "export-to-geojson",
+    "label": $.i18n('geojson/export-to-geojson'),
+    "click": function () {
+        ExporterManager.handlers.exportRows("geojson", "geojson");
+    }
+});
 
 ExporterManager.handlers.exportToGeoJSON = function () {
     const doExportToGeoJSON = function () {

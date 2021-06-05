@@ -13,7 +13,6 @@ import org.geojson.FeatureCollection;
 import org.geojson.Point;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
@@ -34,7 +33,7 @@ public class GeoJSONExporter implements WriterExporter {
     @Override
     public void export(final Project project, Properties params, Engine engine, Writer writer) throws IOException {
         FeatureCollection featureCollection = new FeatureCollection();
-        ArrayList<Feature> features = new ArrayList<Feature>();
+        ArrayList<Feature> features = new ArrayList<>();
 
         TabularSerializer serializer = new TabularSerializer() {
             @Override
