@@ -1,8 +1,8 @@
 {
-  "geojson/export-to-geojson": "GeoJSON (.geojson)",
-  "geojson/enter-file-name": "Enter a name for the GeoJSON file",
-  "geojson/geojson-exporter": "Export to GeoJSON",
   "geojson/export-button": "Export",
+  "geojson/export-to-geojson": "GeoJSON (.geojson)",
+  "geojson/enter-file-name": "Enter a name for the GeoJSON file: ",
+  "geojson/geojson-exporter": "Export to GeoJSON",
   "geojson/select-columns-for-properties-1": "Select the columns you want to include as properties for each feature",
   "geojson/select-columns-for-properties-2": " (Latitude and Longitude columns are automatically identified)"
 }

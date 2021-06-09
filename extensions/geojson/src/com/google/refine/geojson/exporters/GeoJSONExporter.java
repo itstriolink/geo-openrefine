@@ -25,10 +25,7 @@ import java.util.Properties;
 
 
 public class GeoJSONExporter implements WriterExporter {
-
     final static Logger logger = LoggerFactory.getLogger("GeoJSONExporter");
-    final static double factor = 1e7;
-    List<String> propertyColumns;
 
     @Override
     public String getContentType() {
@@ -39,15 +36,12 @@ public class GeoJSONExporter implements WriterExporter {
     public void export(final Project project, Properties params, Engine engine, Writer writer) throws IOException {
         FeatureCollection featureCollection = new FeatureCollection();
         ArrayList<Feature> features = new ArrayList<>();
+        List<String> propertyColumns = new ArrayList<>();
         TabularSerializer serializer = new TabularSerializer() {
             @Override
             public void startFile(JsonNode options) {
-                propertyColumns = new ArrayList<>();
                 List<JsonNode> array = JSONUtilities.getArray(options, "propertyColumns");
-
-                int count = array.size();
-
-                for (int i = 0; i < count; i++) {
+                for (int i = 0; i < array.size(); i++) {
                     JsonNode columnOptions = array.get(i);
                     if (columnOptions != null) {
                         String name = JSONUtilities.getString(columnOptions, "name", null);
@@ -79,12 +73,12 @@ public class GeoJSONExporter implements WriterExporter {
                                 && cellData.columnName.matches(Constants.RegEx.latitudeName)
                                 && latitude == 0) {
                             latitude = Double.parseDouble(cellData.text);
-                            latitude = Math.round(latitude * factor) / factor;
+                            latitude = Math.round(latitude * Constants.latLonFactor) / Constants.latLonFactor;
                         } else if (cellData.text.matches(Constants.RegEx.longitudeValue)
                                 && cellData.columnName.matches(Constants.RegEx.longitudeName)
                                 && longitude == 0) {
                             longitude = Double.parseDouble(cellData.text);
-                            longitude = Math.round(longitude * factor) / factor;
+                            longitude = Math.round(longitude * Constants.latLonFactor) / Constants.latLonFactor;
                         } else if (propertyColumns.contains(cellData.columnName)){
                             feature.setProperty(cellData.columnName, cellData.text);
                         }

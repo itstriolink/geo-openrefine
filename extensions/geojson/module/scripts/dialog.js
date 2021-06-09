@@ -40,6 +40,7 @@ GeoJSONExporterDialog.prototype._createDialog = function () {
     this._level = DialogSystem.showDialog(this._dialog);
 
     this._elmts.dialogHeader.html($.i18n('geojson/geojson-exporter'));
+    this._elmts.enterFileName.html($.i18n('geojson/enter-file-name'));
     this._elmts.or_dialog_selAndOrd1.html($.i18n('geojson/select-columns-for-properties-1'));
     this._elmts.or_dialog_selAndOrd2.html($.i18n('geojson/select-columns-for-properties-2'));
 
@@ -48,6 +49,7 @@ GeoJSONExporterDialog.prototype._createDialog = function () {
 
     this._elmts.exportButton.html($.i18n('geojson/export-button'));
     this._elmts.cancelButton.html($.i18n('core-buttons/cancel'));
+    this._elmts.fileNameInput.val(theProject.metadata.name.replace(/\W/g, ' ').replace(/\s+/g, '_'));
 
 
     for (var i = 0; i < theProject.columnModel.columns.length; i++) {
@@ -98,16 +100,9 @@ GeoJSONExporterDialog.prototype._dismiss = function () {
 
 GeoJSONExporterDialog.prototype._exportData = function () {
     const options = this._getOptionCode();
-    const form = ExporterManager.prepareExportRowsForm(options.format, true, options.extension);
-    $('<input />')
-        .attr("name", "options")
-        .val(JSON.stringify(options))
-        .appendTo(form);
+    const fileName = this._elmts.fileNameInput.val();
 
-    $('<input />')
-        .attr("name", "preview")
-        .val("prev")
-        .appendTo(form);
+    const form = this._prepareExportRows(options.format, options.extension, fileName || theProject.metadata.name, options);
 
     document.body.appendChild(form);
 
@@ -118,6 +113,40 @@ GeoJSONExporterDialog.prototype._exportData = function () {
     this._dismiss();
 };
 
+GeoJSONExporterDialog.prototype._prepareExportRows = function(format, ext, name, options) {
+    var name = encodeURI(ExporterManager.stripNonFileChars(name));
+    var form = document.createElement("form");
+    $(form)
+        .css("display", "none")
+        .attr("method", "post")
+        .attr("action", "command/core/export-rows/" + name + ((ext) ? ("." + ext) : ""))
+        .attr("target", "refine-export");
+
+    $('<input />')
+        .attr("name", "project")
+        .val(theProject.id)
+        .appendTo(form);
+    $('<input />')
+        .attr("name", "format")
+        .val(format)
+        .appendTo(form);
+    $('<input />')
+        .attr("name", "quoteAll")
+        .appendTo(form);
+
+    $('<input />')
+        .attr("name", "engine")
+        .val(JSON.stringify(ui.browsingEngine.getJSON()))
+        .appendTo(form);
+
+    $('<input />')
+        .attr("name", "options")
+        .val(JSON.stringify(options))
+        .appendTo(form);
+
+
+    return form;
+}
 GeoJSONExporterDialog.prototype._getOptionCode = function () {
     const options = {
         format: 'geojson',
