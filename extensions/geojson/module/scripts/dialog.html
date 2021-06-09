@@ -1,0 +1,39 @@
+<div class="dialog-frame" style="min-width: 600px;">
+    <div class="dialog-header" bind="dialogHeader"></div>
+    <div class="dialog-body" bind="dialogBody">
+        <div class="refine-tabs">
+            <div class="geojson-content-main">
+                <div class="grid-layout grid-layout-for-ui layout-full">
+                    <table>
+                        <tr>
+                            <td><span bind="or_dialog_selAndOrd1"/><i><span bind="or_dialog_selAndOrd2"/></i></td>
+                        </tr>
+                        <tr>
+                            <td width="100%">
+                                <div bind="columnList" class="geojson-exporter-columns"></div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="2">
+                                <button class="button" bind="selectAllButton"></button>
+                                <button class="button" bind="deselectAllButton"></button>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="dialog-footer" bind="dialogFooter">
+        <div class="grid-layout layout-tightest layout-full">
+            <table>
+                <tr>
+                    <td style="text-align: right;">
+                        <button class="button" bind="exportButton"></button>
+                        <button class="button" bind="cancelButton"></button>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</div>

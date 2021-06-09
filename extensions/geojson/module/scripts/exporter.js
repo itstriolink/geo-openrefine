@@ -51,29 +51,6 @@ ExporterManager.MenuItems.splice(menuIndex, 0, {
     "id": "export-to-geojson",
     "label": $.i18n('geojson/export-to-geojson'),
     "click": function () {
-        ExporterManager.handlers.exportRows("geojson", "geojson");
+        new GeoJSONExporterDialog();
     }
 });
-
-ExporterManager.handlers.exportToGeoJSON = function () {
-    const doExportToGeoJSON = function () {
-        var name = window.prompt($.i18n('geojson/enter-file-name'), theProject.metadata.name);
-        if (name) {
-            Refine.postCSRF(
-                "command/core/export-rows",
-                {
-                    "project": theProject.id,
-                    "name": name,
-                    "format": "geojson"
-                },
-                function (o) {
-                    alert("niceeeee");
-                    onDone();
-                },
-                "json"
-            );
-        }
-    };
-
-    doExportToGeoJSON();
-}

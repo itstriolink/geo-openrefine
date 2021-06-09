@@ -64,7 +64,8 @@ function init() {
     "project/scripts",
     module,
     [
-      "scripts/exporter.js"
+      "scripts/exporter.js",
+      "scripts/dialog.js"
     ]
   );
 
@@ -73,7 +74,7 @@ function init() {
     "project/styles",
     module,
     [
-      "styles/project-injection.less"
+      "styles/dialog.less"
     ]
   );
 

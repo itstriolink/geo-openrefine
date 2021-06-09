@@ -1,5 +1,6 @@
 package com.google.refine.geojson.exporters;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.refine.browsing.Engine;
@@ -8,6 +9,9 @@ import com.google.refine.exporters.TabularSerializer;
 import com.google.refine.exporters.WriterExporter;
 import com.google.refine.geojson.util.Constants;
 import com.google.refine.model.Project;
+import com.google.refine.util.JSONUtilities;
+import com.google.refine.util.ParsingUtilities;
+import org.apache.jena.atlas.json.JSON;
 import org.geojson.Feature;
 import org.geojson.FeatureCollection;
 import org.geojson.Point;
@@ -24,6 +28,7 @@ public class GeoJSONExporter implements WriterExporter {
 
     final static Logger logger = LoggerFactory.getLogger("GeoJSONExporter");
     final static double factor = 1e7;
+    List<String> propertyColumns;
 
     @Override
     public String getContentType() {
@@ -34,10 +39,23 @@ public class GeoJSONExporter implements WriterExporter {
     public void export(final Project project, Properties params, Engine engine, Writer writer) throws IOException {
         FeatureCollection featureCollection = new FeatureCollection();
         ArrayList<Feature> features = new ArrayList<>();
-
         TabularSerializer serializer = new TabularSerializer() {
             @Override
             public void startFile(JsonNode options) {
+                propertyColumns = new ArrayList<>();
+                List<JsonNode> array = JSONUtilities.getArray(options, "propertyColumns");
+
+                int count = array.size();
+
+                for (int i = 0; i < count; i++) {
+                    JsonNode columnOptions = array.get(i);
+                    if (columnOptions != null) {
+                        String name = JSONUtilities.getString(columnOptions, "name", null);
+                        if (name != null) {
+                            propertyColumns.add(name);
+                        }
+                    }
+                }
             }
 
             @Override
@@ -55,7 +73,6 @@ public class GeoJSONExporter implements WriterExporter {
                 double latitude = 0.0d;
                 double longitude = 0.0d;
                 Feature feature = new Feature();
-
                 for (CellData cellData : cells) {
                     if (cellData != null && cellData.text != null && cellData.columnName != null) {
                         if (cellData.text.matches(Constants.RegEx.latitudeValue)
@@ -68,7 +85,7 @@ public class GeoJSONExporter implements WriterExporter {
                                 && longitude == 0) {
                             longitude = Double.parseDouble(cellData.text);
                             longitude = Math.round(longitude * factor) / factor;
-                        } else {
+                        } else if (propertyColumns.contains(cellData.columnName)){
                             feature.setProperty(cellData.columnName, cellData.text);
                         }
                     }
