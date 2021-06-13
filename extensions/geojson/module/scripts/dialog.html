@@ -1,34 +1,64 @@
 <div class="dialog-frame" style="min-width: 600px;">
     <div class="dialog-header" bind="dialogHeader"></div>
     <div class="dialog-body" bind="dialogBody">
-        <div class="refine-tabs">
-            <div class="geojson-content-main">
-                <div class="grid-layout grid-layout-for-ui layout-full">
-                    <table>
-                        <tr>
-                            <th><label for="enterFileName" bind="enterFileName"/>
-                                <input style="width:50%;" id="enterFileName" bind="fileNameInput" type="text"/>
-                            </th>
-                        </tr>
-                        <tr>
-                            <td><hr style="margin: 1em 0;"/></td>
-                        </tr>
-                        <tr>
-                            <td><span bind="or_dialog_selAndOrd1"/><i><span bind="or_dialog_selAndOrd2"/></i></td>
-                        </tr>
-                        <tr>
-                            <td width="100%">
-                                <div bind="columnList" class="geojson-exporter-columns"></div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td colspan="2">
-                                <button class="button" bind="selectAllButton"></button>
-                                <button class="button" bind="deselectAllButton"></button>
-                            </td>
-                        </tr>
-                    </table>
-                </div>
+        <div class="geojson-content-main">
+            <div class="grid-layout grid-layout-for-ui layout-full">
+                <table>
+                    <tr>
+                        <th>
+                            <label for="enterFileName" bind="enterFileName"/>
+                            <input id="enterFileName" bind="fileNameInput" type="text"/>
+                        </th>
+                    </tr>
+                    <tr>
+                        <td>
+                            <hr style="margin: 1em 0;"/>
+                        </td>
+                        <td>
+                            <hr style="margin: 1em 0;"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td bind="selectCoordinateCols" />
+                        <td bind="selectProps" />
+                    </tr>
+                    <tr>
+                        <td width="60%">
+                            <div class="geojson-exporter-columns">
+                                <table>
+                                    <tbody>
+                                    <tr>
+                                        <td width="50%" id="select-latitude-column">
+                                            <label for="selectLatitude" bind="selectLat" width="100%"/>
+                                        </td>
+                                        <td width="50%" id="select-longitude-column">
+                                            <label for="selectLongitude" bind="selectLon" width="100%"/>
+                                        </td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </td>
+                        <td width="50%">
+                            <div bind="columnList" class="geojson-exporter-columns"></div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td width="50" />
+                        <td colspan="2">
+                            <button class="button" bind="selectAllButton"></button>
+                            <button class="button" bind="deselectAllButton"></button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><div class="grid-layout layout-tighter layout-full"><table>
+                            <tr>
+                                <td width="1%"><input type="checkbox" bind="outputEmptyRowsCheckbox" id="output-empty-rows" /></td>
+                                <td width="25%"><label for="output-empty-rows" bind="outputEmptyRows"></label></td>
+                            </tr>
+                        </table></div></td>
+                    </tr>
+                </table>
             </div>
         </div>
     </div>

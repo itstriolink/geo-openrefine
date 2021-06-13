@@ -28,7 +28,6 @@
  */
 
 function GeoJSONExporterDialog() {
-    this._columnOptionMap = {};
     this._createDialog();
 }
 
@@ -41,16 +40,22 @@ GeoJSONExporterDialog.prototype._createDialog = function () {
 
     this._elmts.dialogHeader.html($.i18n('geojson/geojson-exporter'));
     this._elmts.enterFileName.html($.i18n('geojson/enter-file-name'));
-    this._elmts.or_dialog_selAndOrd1.html($.i18n('geojson/select-columns-for-properties-1'));
-    this._elmts.or_dialog_selAndOrd2.html($.i18n('geojson/select-columns-for-properties-2'));
+    this._elmts.selectProps.html($.i18n('geojson/select-columns-for-properties'));
+
+    this._elmts.selectCoordinateCols.html($.i18n('geojson/select-coordinate-columns'));
+
+    this._elmts.selectLat.html($.i18n('geojson/select-latitude-column'));
+    this._elmts.selectLon.html($.i18n('geojson/select-longitude-column'));
 
     this._elmts.selectAllButton.html($.i18n('core-buttons/select-all'));
     this._elmts.deselectAllButton.html($.i18n('core-buttons/deselect-all'));
 
     this._elmts.exportButton.html($.i18n('geojson/export-button'));
     this._elmts.cancelButton.html($.i18n('core-buttons/cancel'));
-    this._elmts.fileNameInput.val(theProject.metadata.name.replace(/\W/g, ' ').replace(/\s+/g, '_'));
 
+    this._elmts.outputEmptyRows.html($.i18n('geojson/output-empty-rows'));
+    this._elmts.fileNameInput.val(theProject.metadata.name.replace(/\W/g, ' ').replace(/\s+/g, '_'));
+    self._generateSelectElements();
 
     for (var i = 0; i < theProject.columnModel.columns.length; i++) {
         var column = theProject.columnModel.columns[i];
@@ -69,10 +74,6 @@ GeoJSONExporterDialog.prototype._createDialog = function () {
             $('<span>')
                 .text(name)
                 .appendTo(div);
-
-            this._columnOptionMap[name] = {
-                name: name,
-            };
         }
 
     }
@@ -147,12 +148,16 @@ GeoJSONExporterDialog.prototype._prepareExportRows = function(format, ext, name,
 
     return form;
 }
+
 GeoJSONExporterDialog.prototype._getOptionCode = function () {
     const options = {
         format: 'geojson',
         extension: 'geojson',
         encoding: 'UTF-8',
         outputBlankRows: false,
+        latitudeColumn: $("select#selectLatitude").val(),
+        longitudeColumn: $("select#selectLongitude").val(),
+        includeEmptyCoordinates: this._elmts.outputEmptyRowsCheckbox[0].checked,
         propertyColumns: [],
     };
 
@@ -166,4 +171,54 @@ GeoJSONExporterDialog.prototype._getOptionCode = function () {
 
     return options;
 };
+
+GeoJSONExporterDialog.prototype._generateSelectElements = function () {
+    var self = this;
+    const latitudeSel = $('<select>').appendTo('body');
+    const longitudeSel = $('<select>').appendTo('body');
+    latitudeSel.attr("id", "selectLatitude");
+    longitudeSel.attr("id", "selectLongitude");
+
+
+    var previous;
+    latitudeSel.add(longitudeSel).on("focus click",function () {
+        previous = this.value;
+    }).change(function() {
+        var value =  this.value; // New Value
+        $('.geojson-exporter-dialog-row[column="'+value+'"]').remove();
+        if($('.geojson-exporter-dialog-row[column="'+previous+'"]').length === 0) {
+            var div = $('<div>')
+                .addClass("geojson-exporter-dialog-row")
+                .attr("column", previous)
+                .appendTo(self._elmts.columnList);
+
+            $('<input>')
+                .attr('type', 'checkbox')
+                .prop('checked', true)
+                .appendTo(div);
+
+            $('<span>')
+                .text(previous)
+                .appendTo(div);
+        }
+    });
+
+    for (var i = 0; i < theProject.columnModel.columns.length; i++) {
+        var column = theProject.columnModel.columns[i];
+
+        latitudeSel.append($("<option>").val(column.name).text(column.name));
+        longitudeSel.append($("<option>").val(column.name).text(column.name));
+
+        if(column.name.match("^(lat|lon).*$")) {
+            if(column.name.match("^lat.*$")) {
+                latitudeSel.val(column.name);
+            } else {
+                longitudeSel.val(column.name);
+            }
+        }
+    }
+
+    latitudeSel.appendTo($("#select-latitude-column")[0]);
+    longitudeSel.appendTo($("#select-longitude-column")[0]);
+}
 
