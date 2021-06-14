@@ -47,8 +47,7 @@ public class GeoJSONExporter implements WriterExporter {
             @Override
             public void startFile(JsonNode options) {
                 List<JsonNode> array = JSONUtilities.getArray(options, "propertyColumns");
-                for (int i = 0; i < array.size(); i++) {
-                    JsonNode columnOptions = array.get(i);
+                for (JsonNode columnOptions : array) {
                     if (columnOptions != null) {
                         String name = JSONUtilities.getString(columnOptions, "name", null);
                         if (name != null) {
@@ -59,7 +58,7 @@ public class GeoJSONExporter implements WriterExporter {
 
                 latitudeColumn = JSONUtilities.getString(options, "latitudeColumn", null);
                 longitudeColumn = JSONUtilities.getString(options, "longitudeColumn", null);
-                includeEmptyCoordinates = JSONUtilities.getBoolean(options, "includeEmptyCoordinates", false);
+                includeEmptyCoordinates = JSONUtilities.getBoolean(options, "outputBlankRows", false);
             }
 
             @Override
@@ -74,33 +73,37 @@ public class GeoJSONExporter implements WriterExporter {
 
             @Override
             public void addRow(List<CellData> cells, boolean isHeader) {
-                if (!isHeader) {
-                    double latitude = 0.0d;
-                    double longitude = 0.0d;
-                    Feature feature = new Feature();
-                    for (CellData cellData : cells) {
-                        if ((includeEmptyCoordinates || (cellData != null && cellData.text != null)) && cellData.columnName != null) {
-                            if (cellData.columnName.equals(latitudeColumn)
-                                    && latitude == 0) {
+                double latitude = 0.0d;
+                double longitude = 0.0d;
+                Feature feature = new Feature();
+                for (CellData cellData : cells) {
+                    if (includeEmptyCoordinates || (cellData != null && cellData.text != null && cellData.columnName != null)) {
+                        if (cellData != null && cellData.columnName.equals(latitudeColumn)) {
+                            try {
                                 latitude = Double.parseDouble(cellData.text);
                                 latitude = Math.round(latitude * Constants.latLonFactor) / Constants.latLonFactor;
-                            } else if (cellData.columnName.equals(longitudeColumn)
-                                    && longitude == 0) {
+                            } catch (NumberFormatException nfe) {
+                                logger.error("The '" +cellData.text+ "' value on the '" +cellData.columnName+ "' column could not be parsed to a latitude coordinate.");
+                            }
+                        } else if (cellData != null && cellData.columnName.equals(longitudeColumn)) {
+                            try {
                                 longitude = Double.parseDouble(cellData.text);
                                 longitude = Math.round(longitude * Constants.latLonFactor) / Constants.latLonFactor;
-                            } else if (propertyColumns.contains(cellData.columnName)) {
-                                feature.setProperty(cellData.columnName, cellData.text);
+                            } catch (NumberFormatException nfe) {
+                                logger.error("The '" +cellData.text+ "' value on the '" +cellData.columnName+ "' column could not be parsed to a longitude coordinate.");
                             }
+                        } else if (cellData != null && propertyColumns.contains(cellData.columnName)) {
+                            feature.setProperty(cellData.columnName, cellData.text);
                         }
                     }
+                }
 
-                    if (latitude == 0 && longitude == 0 && includeEmptyCoordinates) {
-                        feature.setGeometry(new Point());
-                        features.add(feature);
-                    } else if (latitude > 0 && longitude > 0) {
-                        feature.setGeometry(new Point(longitude, latitude));
-                        features.add(feature);
-                    }
+                if (latitude == 0 && longitude == 0 && includeEmptyCoordinates) {
+                    feature.setGeometry(new Point());
+                    features.add(feature);
+                } else if (latitude > 0 && longitude > 0) {
+                    feature.setGeometry(new Point(longitude, latitude));
+                    features.add(feature);
                 }
             }
         };

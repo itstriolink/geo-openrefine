@@ -154,11 +154,11 @@ GeoJSONExporterDialog.prototype._getOptionCode = function () {
         format: 'geojson',
         extension: 'geojson',
         encoding: 'UTF-8',
-        outputBlankRows: false,
+        outputColumnHeaders: false,
+        outputBlankRows: this._elmts.outputEmptyRowsCheckbox[0].checked,
         latitudeColumn: $("select#selectLatitude").val(),
         longitudeColumn: $("select#selectLongitude").val(),
-        includeEmptyCoordinates: this._elmts.outputEmptyRowsCheckbox[0].checked,
-        propertyColumns: [],
+        propertyColumns: []
     };
 
     this._elmts.columnList.find('.geojson-exporter-dialog-row').each(function () {
