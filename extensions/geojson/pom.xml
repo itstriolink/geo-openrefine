@@ -6,7 +6,7 @@
   <packaging>jar</packaging>
 
   <name>OpenRefine - GeoJSON Extension</name>
-  <description>Integrating Geospatial data support with OSM</description>
+  <description>GeoJSON export for OpenRefine data</description>
   <url>http://openrefine.org/</url>
   <parent>
     <groupId>org.openrefine</groupId>
@@ -59,6 +59,16 @@
         <version>2.6</version>
         <configuration>
           <encoding>UTF-8</encoding>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>${surefire.version}</version>
+        <configuration>
+          <suiteXmlFiles>
+            <suiteXmlFile>tests/conf/tests.xml</suiteXmlFile>
+          </suiteXmlFiles>
         </configuration>
       </plugin>
       <plugin>

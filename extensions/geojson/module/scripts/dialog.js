@@ -68,7 +68,7 @@ GeoJSONExporterDialog.prototype._createDialog = function () {
 
             $('<input>')
                 .attr('type', 'checkbox')
-                .prop('checked', true)
+                .prop('checked', false)
                 .appendTo(div);
 
             $('<span>')
@@ -194,7 +194,7 @@ GeoJSONExporterDialog.prototype._generateSelectElements = function () {
 
             $('<input>')
                 .attr('type', 'checkbox')
-                .prop('checked', true)
+                .prop('checked', false)
                 .appendTo(div);
 
             $('<span>')
