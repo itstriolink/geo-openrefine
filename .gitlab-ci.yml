@@ -1,8 +1,7 @@
 default:
   image: maven:latest
   before_script:
-    - mvn clean
-    - mvn compile test-compile dependency:build-classpath
+    - mvn clean install -DskipTests -U
     
 test:
   stage: test
