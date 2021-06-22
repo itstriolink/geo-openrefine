@@ -1,8 +1,10 @@
-default:
-  image: maven:latest
-  before_script:
+image: maven:latest  
+
+build:
+  stage: build
+  script: 
     - mvn clean install -DskipTests -U
-    
+
 test:
   stage: test
   script:
