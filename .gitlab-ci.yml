@@ -3,10 +3,10 @@ image: maven:3.3.9-jdk-8
 build:
   stage: build
   script: 
-    - mvn clean install -DskipTests -U
+    - mvn clean compile test-compile dependency:build-classpath
 
 test:
   stage: test
   script:
     - cd extensions/geojson
-    - mvn test
+    - mvn test dependency:build-classpath
