@@ -1,19 +1,9 @@
-image: maven:latest
-
-variables:
-  MAVEN_OPTS: "-Dmaven.repo.local=.m2/repository"
-
-cache:
-  paths:
-    - .m2/repository/
-    - target/
-
-build:
-  stage: build
-  script:
+default:
+  image: maven:latest
+  before_script:
     - mvn clean
     - mvn compile test-compile dependency:build-classpath
-
+    
 test:
   stage: test
   script:
