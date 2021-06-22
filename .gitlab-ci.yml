@@ -12,7 +12,7 @@ build:
   stage: build
   script:
     - mvn clean
-    - mvn compile
+    - mvn compile test-compile dependency:build-classpath
 
 test:
   stage: test
