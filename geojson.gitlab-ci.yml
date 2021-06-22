@@ -11,7 +11,8 @@ cache:
 build:
   stage: build
   script:
-    - mvn clean install
+    - mvn clean
+    - mvn test-compile
 
 test:
   stage: test
