@@ -23,8 +23,8 @@ LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
 A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
 OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
 SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,           
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY           
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
 THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
@@ -37,7 +37,7 @@ $.ajax({
     type: "POST",
     async: false,
     data: {
-        module: "geojson",
+        module: "osm-overpass",
     },
     success: function (data) {
         dictionary = data['dictionary'];
@@ -45,12 +45,12 @@ $.ajax({
     }
 });
 $.i18n().load(dictionary, lang);
-var menuIndex = ExporterManager.MenuItems.findIndex(i => i.id === "core/export-ods");
 
-ExporterManager.MenuItems.splice(menuIndex, 0, {
-    "id": "export-to-geojson",
-    "label": $.i18n('geojson/export-to-geojson'),
+//Temporary location
+ExporterManager.MenuItems.push({}, {
+    "id": "osm-overpass",
+    "label": $.i18n('osm-overpass/overpass'),
     "click": function () {
-        new GeoJSONExporterDialog();
+        new OpenStreetMapDialog();
     }
 });
