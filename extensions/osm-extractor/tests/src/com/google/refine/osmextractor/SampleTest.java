@@ -1,4 +1,4 @@
-package com.google.refine.osmoverpass;
+package com.google.refine.osmextractor;
 import static org.testng.Assert.assertEquals;
 import org.testng.annotations.Test;
 

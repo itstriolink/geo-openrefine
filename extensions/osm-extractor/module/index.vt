@@ -1,12 +1,12 @@
 #*
- * Access this page at the URL /extension/osm-overpass/
+ * Access this page at the URL /extension/osm-extractor/
  *#
 <html>
   <head>
-    <title>Overpass Extension</title>
+    <title>OSM Extractor Extension</title>
   </head>
   <body>
-    <h1>Overpass Extension</h1>
+    <h1>OSM Extractor Extension</h1>
 
     <p>If an extension needs its own page, then this is such an example.
       However, mostly, extensions only need to inject their own scripts

@@ -37,7 +37,7 @@ $.ajax({
     type: "POST",
     async: false,
     data: {
-        module: "osm-overpass",
+        module: "osm-extractor",
     },
     success: function (data) {
         dictionary = data['dictionary'];
@@ -48,9 +48,9 @@ $.i18n().load(dictionary, lang);
 
 //Temporary location
 ExporterManager.MenuItems.push({}, {
-    "id": "osm-overpass",
-    "label": $.i18n('osm-overpass/overpass'),
+    "id": "osm-extractor",
+    "label": $.i18n('osm-extractor/osm-extractor'),
     "click": function () {
-        new OpenStreetMapDialog();
+        new OSMExtractorDialog();
     }
 });

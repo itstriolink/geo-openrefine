@@ -5,6 +5,8 @@
             <ul>
                 <li><a href="#tabs-query" bind="dialogQuery"></a></li>
                 <li><a href="#tabs-raw-query" bind="dialogRawQuery"></a></li>
+                <li><a href="#tabs-settings" bind="dialogSettings"></a></li>
+
             </ul>
 
             <div id="tabs-query">
@@ -200,29 +202,37 @@
                     </table>
                 </div>
             </div>
-            <div id="tabs-raw-query" style="display: none;">
-                <div class="grid-layout grid-layout-for-ui layout-loose layout-full">
+            <div id="tabs-raw-query" style="display: none;"><div class="grid-layout grid-layout-for-ui layout-loose layout-full">
                     <table>
                         <tr>
                             <td colspan="2">
                                 <textarea class="raw-query-code"
-                                          bind="rawQueryInput" />
+                                          bind="rawQueryInput"/>
                             </td>
                         </tr>
                     </table>
                 </div>
             </div>
-        </div>
-        <div class="dialog-footer" bind="dialogFooter">
-            <div class="grid-layout layout-tightest layout-full">
+            <div id="tabs-raw-query" style="display: none;"><div class="grid-layout grid-layout-for-ui layout-loose layout-full">
                 <table>
                     <tr>
-                        <td style="text-align: right;">
-                            <button class="button" bind="cancelButton"></button>
+                        <td>
                         </td>
                     </tr>
                 </table>
             </div>
+            </div>
+        </div>
+    </div>
+    <div class="dialog-footer" bind="dialogFooter">
+        <div class="grid-layout layout-tightest layout-full">
+            <table>
+                <tr>
+                    <td style="text-align: right;">
+                        <button class="button" bind="cancelButton"></button>
+                    </td>
+                </tr>
+            </table>
         </div>
     </div>
 </div>

@@ -1,4 +1,4 @@
-package com.google.refine.osmoverpass;
+package com.google.refine.osmextractor;
 
 
 public class SampleUtil {

@@ -27,49 +27,51 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-function OpenStreetMapDialog() {
+function OSMExtractorDialog() {
     this._createDialog();
 }
 
-OpenStreetMapDialog.prototype._createDialog = function () {
+OSMExtractorDialog.prototype._createDialog = function () {
     var self = this;
 
-    this._dialog = $(DOM.loadHTML("osm-overpass", "scripts/dialog.html"));
+    this._dialog = $(DOM.loadHTML("osm-extractor", "scripts/dialog.html"));
     this._elmts = DOM.bind(this._dialog);
     this._level = DialogSystem.showDialog(this._dialog);
 
-    this._elmts.dialogHeader.html($.i18n('osm-overpass/dialog-header'));
+    this._elmts.dialogHeader.html($.i18n('osm-extractor/osm-extractor'));
 
-    this._elmts.dialogQuery.html($.i18n('osm-overpass/query-tab'));
-    this._elmts.dialogRawQuery.html($.i18n('osm-overpass/raw-query-tab'));
+    this._elmts.dialogQuery.html($.i18n('osm-extractor/query-tab'));
+    this._elmts.dialogRawQuery.html($.i18n('osm-extractor/raw-query-tab'));
+    this._elmts.dialogSettings.html($.i18n('osm-extractor/settings-tab'));
 
 
-    this._elmts.cancelButton.html($.i18n('core-buttons/cancel'));
+    this._elmts.cancelButton.html($.i18n('core-buttons/cancel'))
+    this._elmts.cancelButton.click(function() { self._dismiss(); });
 
     $("#tabs-query").css("display", "");
     $("#tabs-raw-query").css("display", "");
     $("#custom-tabular-exporter-tabs").tabs();
 
-    //this._elmts.enterFileName.html($.i18n('osm-overpass/enter-file-name'));
-    //this._elmts.selectProps.html($.i18n('osm-overpass/select-columns-for-properties'));
+    //this._elmts.enterFileName.html($.i18n('osm-extractor/enter-file-name'));
+    //this._elmts.selectProps.html($.i18n('osm-extractor/select-columns-for-properties'));
 
-    //this._elmts.selectCoordinateCols.html($.i18n('osm-overpass/select-coordinate-columns'));
+    //this._elmts.selectCoordinateCols.html($.i18n('osm-extractor/select-coordinate-columns'));
 
-    //this._elmts.selectLat.html($.i18n('osm-overpass/select-latitude-column'));
-    //this._elmts.selectLon.html($.i18n('osm-overpass/select-longitude-column'));
+    //this._elmts.selectLat.html($.i18n('osm-extractor/select-latitude-column'));
+    //this._elmts.selectLon.html($.i18n('osm-extractor/select-longitude-column'));
 
     //this._elmts.selectAllButton.html($.i18n('core-buttons/select-all'));
     //this._elmts.deselectAllButton.html($.i18n('core-buttons/deselect-all'));
 
-    //this._elmts.exportButton.html($.i18n('osm-overpass/export-button'));
+    //this._elmts.exportButton.html($.i18n('osm-extractor/export-button'));
     //this._elmts.cancelButton.html($.i18n('core-buttons/cancel'));
 
-    //this._elmts.outputEmptyRows.html($.i18n('osm-overpass/output-empty-rows'));
+    //this._elmts.outputEmptyRows.html($.i18n('osm-extractor/output-empty-rows'));
     //this._elmts.fileNameInput.val(theProject.metadata.name.replace(/\W/g, ' ').replace(/\s+/g, '_'));
 };
 
 
-OpenStreetMapDialog.prototype._dismiss = function () {
+OSMExtractorDialog.prototype._dismiss = function () {
     DialogSystem.dismissUntil(this._level - 1);
 };
 

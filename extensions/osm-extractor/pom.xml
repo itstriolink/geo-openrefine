@@ -2,11 +2,11 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <artifactId>osm-overpass</artifactId>
+  <artifactId>osm-extractor</artifactId>
   <packaging>jar</packaging>
 
-  <name>OpenRefine - OpenStreetMap extension</name>
-  <description>OpenRefine extension that uses Overpass API to communicate with OSM data</description>
+  <name>OpenRefine - OSM Extractor extension</name>
+  <description>OpenRefine extension that uses the Overpass API to extract OpenStreetMap data</description>
   <url>http://openrefine.org/</url>
   <parent>
     <groupId>org.openrefine</groupId>
@@ -15,7 +15,7 @@
   </parent>
 
   <build>
-    <finalName>openrefine-osmoverpass</finalName>
+    <finalName>openrefine-osmextractor</finalName>
     <resources>
       <resource>
         <directory>src</directory>
