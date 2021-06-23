@@ -8,4 +8,4 @@ build:
 test:
   stage: test
   script:
-    - mvn test -f main
+    - mvn test -f extensions/geojson
