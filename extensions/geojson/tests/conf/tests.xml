@@ -8,7 +8,7 @@
       </run>
     </groups>
     <packages>
-      <package name="com.google.refine.extension.geojson.*" />
+      <package name="com.google.refine.geojson.*" />
     </packages>
   </test>
 </suite>

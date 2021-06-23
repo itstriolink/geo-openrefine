@@ -6,7 +6,7 @@
   <packaging>jar</packaging>
 
   <name>OpenRefine - GeoJSON Extension</name>
-  <description>GeoJSON export for OpenRefine data</description>
+  <description>GeoJSON export for OpenRefine</description>
   <url>http://openrefine.org/</url>
   <parent>
     <groupId>org.openrefine</groupId>
@@ -121,12 +121,6 @@
       <version>2.5</version>
       <scope>provided</scope>
     </dependency>
-
-<!--    <dependency>-->
-<!--      <groupId>de.topobyte</groupId>-->
-<!--      <artifactId>osm4j-core</artifactId>-->
-<!--      <version>1.2.0</version>-->
-<!--    </dependency>-->
 
     <dependency>
       <groupId>org.testng</groupId>
