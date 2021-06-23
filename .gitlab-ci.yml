@@ -1,0 +1,16 @@
+stages:
+  - build
+  - test
+
+image: maven:3.6.3-jdk-11
+
+build:
+  stage: build
+  script: 
+    - mvn clean install -Dmaven.test.skip=true
+
+test:
+  stage: test
+  needs: [build]
+  script:
+    - mvn test -f extensions/geojson
