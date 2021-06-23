@@ -8,5 +8,4 @@ build:
 test:
   stage: test
   script:
-    - cd extensions/geojson
-    - mvn test dependency:build-classpath
+    - mvn test -f main
