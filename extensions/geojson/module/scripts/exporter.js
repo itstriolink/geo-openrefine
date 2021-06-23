@@ -45,7 +45,7 @@ $.ajax({
     }
 });
 $.i18n().load(dictionary, lang);
-const menuIndex = ExporterManager.MenuItems.findIndex(i => i.id === "core/export-ods");
+var menuIndex = ExporterManager.MenuItems.findIndex(i => i.id === "core/export-ods");
 
 ExporterManager.MenuItems.splice(menuIndex, 0, {
     "id": "export-to-geojson",
