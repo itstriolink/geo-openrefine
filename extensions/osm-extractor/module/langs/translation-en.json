@@ -2,5 +2,6 @@
   "osm-extractor/osm-extractor": "OSM Extractor",
   "osm-extractor/query-tab": "Query",
   "osm-extractor/raw-query-tab": "Raw Query",
-  "osm-extractor/settings-tab": "Settings"
+  "osm-extractor/settings-tab": "Settings",
+  "osm-extractor/select-overpass-instance": "Select Overpass instance"
 }

@@ -44,7 +44,7 @@ OSMExtractorDialog.prototype._createDialog = function () {
     this._elmts.dialogRawQuery.html($.i18n('osm-extractor/raw-query-tab'));
     this._elmts.dialogSettings.html($.i18n('osm-extractor/settings-tab'));
 
-
+    this._elmts.selectInstance.html($.i18n('osm-extractor/select-overpass-instance'));
     this._elmts.cancelButton.html($.i18n('core-buttons/cancel'))
     this._elmts.cancelButton.click(function() { self._dismiss(); });
 
@@ -52,24 +52,32 @@ OSMExtractorDialog.prototype._createDialog = function () {
     $("#tabs-raw-query").css("display", "");
     $("#custom-tabular-exporter-tabs").tabs();
 
-    //this._elmts.enterFileName.html($.i18n('osm-extractor/enter-file-name'));
-    //this._elmts.selectProps.html($.i18n('osm-extractor/select-columns-for-properties'));
-
-    //this._elmts.selectCoordinateCols.html($.i18n('osm-extractor/select-coordinate-columns'));
-
-    //this._elmts.selectLat.html($.i18n('osm-extractor/select-latitude-column'));
-    //this._elmts.selectLon.html($.i18n('osm-extractor/select-longitude-column'));
-
-    //this._elmts.selectAllButton.html($.i18n('core-buttons/select-all'));
-    //this._elmts.deselectAllButton.html($.i18n('core-buttons/deselect-all'));
-
-    //this._elmts.exportButton.html($.i18n('osm-extractor/export-button'));
-    //this._elmts.cancelButton.html($.i18n('core-buttons/cancel'));
-
-    //this._elmts.outputEmptyRows.html($.i18n('osm-extractor/output-empty-rows'));
-    //this._elmts.fileNameInput.val(theProject.metadata.name.replace(/\W/g, ' ').replace(/\s+/g, '_'));
+    self._createSettingsTab();
 };
 
+OSMExtractorDialog.prototype._createSettingsTab = function () {
+    const overpassInstanceSelect = $('<select>').appendTo('body');
+    overpassInstanceSelect.attr("id", "selectInstance");
+
+    overpassInstanceSelect.appendTo($("#select-overpass-instance")[0]);
+
+    $.getJSON(
+        "command/osm-extractor/get-overpass-instances",
+        null,
+        function(data) {
+            if(data.instances && data.instances.length > 0) {
+                var overpassInstances = data.instances;
+
+                for(const instance of overpassInstances) {
+                    overpassInstanceSelect.append($("<option>").val(instance).text(instance));
+                }
+
+                overpassInstanceSelect.val(overpassInstances[0]);
+            }
+        },
+        "json"
+    );
+};
 
 OSMExtractorDialog.prototype._dismiss = function () {
     DialogSystem.dismissUntil(this._level - 1);

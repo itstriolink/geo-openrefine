@@ -40,7 +40,13 @@ var ClientSideResourceManager = Packages.com.google.refine.ClientSideResourceMan
  * Function invoked to initialize the extension.
  */
 
+function registerCommands() {
+    var RefineServlet = Packages.com.google.refine.RefineServlet;
+    RefineServlet.registerCommand(module, "get-overpass-instances", new Packages.com.google.refine.osmextractor.commands.GetInstancesCommand());
+}
+
 function init() {
+
   Packages.java.lang.System.out.println("Initializing OSM extension...");
   Packages.java.lang.System.out.println(module.getMountPoint());
 
@@ -63,7 +69,7 @@ function init() {
       ]
   );
 
-  //registerCommands();
+  registerCommands();
   //registerExporters();
 }
 
