@@ -27,6 +27,14 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+const OSM_ELEMENTS = {
+    NODE: "node",
+    WAY: "way",
+    RELATION: "relation"
+}
+
+let _response = {};
+
 function OSMExtractorDialog() {
     this._createDialog();
 }
@@ -34,50 +42,212 @@ function OSMExtractorDialog() {
 OSMExtractorDialog.prototype._createDialog = function () {
     var self = this;
 
-    this._dialog = $(DOM.loadHTML("osm-extractor", "scripts/dialog.html"));
-    this._elmts = DOM.bind(this._dialog);
-    this._level = DialogSystem.showDialog(this._dialog);
+    self._dialog = $(DOM.loadHTML("osm-extractor", "scripts/dialog.html"));
+    self._elmts = DOM.bind(this._dialog);
+    self._level = DialogSystem.showDialog(this._dialog);
 
-    this._elmts.dialogHeader.html($.i18n('osm-extractor/osm-extractor'));
+    self._elmts.dialogHeader.html($.i18n('osm-extractor/osm-extractor'));
 
-    this._elmts.dialogQuery.html($.i18n('osm-extractor/query-tab'));
-    this._elmts.dialogRawQuery.html($.i18n('osm-extractor/raw-query-tab'));
-    this._elmts.dialogSettings.html($.i18n('osm-extractor/settings-tab'));
+    self._elmts.dialogQuery.html($.i18n('osm-extractor/query-tab'));
+    self._elmts.selectKey.html($.i18n('osm-extractor/osm-key-label'));
+    self._elmts.selectValue.html($.i18n('osm-extractor/osm-value-label'));
+    self._elmts.dialogRawQuery.html($.i18n('osm-extractor/raw-query-tab'));
+    self._elmts.dialogSettings.html($.i18n('osm-extractor/settings-tab'));
+    self._elmts.enterRawQuery.html($.i18n('osm-extractor/enter-raw-query'));
 
-    this._elmts.selectInstance.html($.i18n('osm-extractor/select-overpass-instance'));
-    this._elmts.cancelButton.html($.i18n('core-buttons/cancel'))
-    this._elmts.cancelButton.click(function() { self._dismiss(); });
+    self._elmts.runRawQueryButton.html($.i18n('osm-extractor/run-query'));
+    self._elmts.saveRawQueryButton.html($.i18n('osm-extractor/save-query'));
+
+    self._elmts.selectInstance.html($.i18n('osm-extractor/select-overpass-instance'));
+    self._elmts.cancelButton.html($.i18n('core-buttons/cancel'))
+
 
     $("#tabs-query").css("display", "");
     $("#tabs-raw-query").css("display", "");
-    $("#custom-tabular-exporter-tabs").tabs();
+    $("#osm-extractor-tabs").tabs();
 
-    self._createSettingsTab();
+    self._createAndPopulateKeyAndValue();
+    self._createAndPopulateSettingsTab();
+
+    this._elmts.cancelButton.click(function () {
+        self._dismiss();
+    });
+
+    this._elmts.runRawQueryButton.click(function (_) {
+        var data = self._elmts.rawQueryInput[0] && self._elmts.rawQueryInput[0].value;
+        var overpassAPI = $("#selectInstance").val();
+
+        if (data && overpassAPI) {
+            $.post(
+                overpassAPI,
+                {
+                    "data": data
+                },
+                function (response) {
+                    _response = response.elements;
+                    if (response.elements && response.elements.length > 0) {
+                        const osmElements = response.elements;
+                        const columns = Object.keys(osmElements[0].tags);
+                        $(".osm-extractor-dialog-row").remove();
+                        for (var i = 0; i < columns.length; i++) {
+                            var column = columns[i];
+
+                            var row = $('<tr>')
+                                .addClass("osm-extractor-dialog-row")
+                                .attr("column", column)
+                                .attr("rowIndex", i)
+                                .appendTo(self._elmts.columnList);
+                            var tagNameCell = $('<td>')
+                                .attr('width', '100px')
+                                .appendTo(row);
+
+                            $('<input>')
+                                .attr('type', 'checkbox')
+                                .attr("id", "checkbox-" + i)
+                                .attr("class", "includeTagCheckbox")
+                                .prop('checked', true)
+                                .attr("rowIndex", i)
+                                .appendTo(tagNameCell);
+                            $('<span>')
+                                .text(column)
+                                .attr("class", "osmTagName")
+                                .attr("rowIndex", i)
+                                .appendTo(tagNameCell);
+
+                            var newColumnNameCell = $('<td>')
+                                .attr('width', '100px')
+                                .appendTo(row);
+                            $('<input>')
+                                .attr('type', 'text')
+                                .attr('size', '8px')
+                                .attr("class", "newColumnName")
+                                .attr("id", "newColumnInput-" + i)
+                                .attr("rowIndex", i)
+                                .appendTo(newColumnNameCell);
+
+
+                            $("#checkbox-" + i).click(function () {
+                                var index = this.getAttribute('rowIndex');
+                                if (this.checked) {
+                                    $("#newColumnInput-" + index).attr("disabled", false);
+                                } else {
+                                    $("#newColumnInput-" + index).attr("disabled", true);
+                                }
+                            });
+                        }
+                    }
+                },
+                "json"
+            )
+        }
+    });
+
+    this._elmts.saveRawQueryButton.click(function (_) {
+        var mappings = [];
+        var data = _response;
+
+        $('#raw-query-response-table tbody tr').each(function () {
+            var row = $(this);
+            var checkbox = row.find('input.includeTagCheckbox')[0];
+            var osmTag = row.find('span.osmTagName').html();
+            var newColumnName = row.find('input.newColumnName').val();
+
+            if (checkbox.checked) {
+                mappings.push({
+                    osmTag,
+                    newColumnName,
+                });
+            }
+        });
+
+        Refine.postProcess(
+            "osm-extractor",
+            "add-osm-data-to-project",
+            {},
+            {
+                mappings: JSON.stringify(mappings),
+                data: JSON.stringify(data)
+            },
+            {modelsChanged: true},
+            {
+                onDone: function () {
+                    self._dismiss();
+                },
+                onError: function (e) {
+                    alert("Something went wrong...");
+                },
+            }
+        );
+    });
 };
 
-OSMExtractorDialog.prototype._createSettingsTab = function () {
+OSMExtractorDialog.prototype._createAndPopulateSettingsTab = function () {
     const overpassInstanceSelect = $('<select>').appendTo('body');
     overpassInstanceSelect.attr("id", "selectInstance");
 
-    overpassInstanceSelect.appendTo($("#select-overpass-instance")[0]);
+    overpassInstanceSelect.appendTo($("#settings-select-overpass-instance")[0]);
 
     $.getJSON(
         "command/osm-extractor/get-overpass-instances",
         null,
-        function(data) {
-            if(data.instances && data.instances.length > 0) {
+        function (data) {
+            if (data.instances && data.instances.length > 0) {
                 var overpassInstances = data.instances;
 
-                for(const instance of overpassInstances) {
+                for (const instance of overpassInstances) {
                     overpassInstanceSelect.append($("<option>").val(instance).text(instance));
                 }
 
                 overpassInstanceSelect.val(overpassInstances[0]);
+            } else {
+                window.alert($.i18n("osm-extractor/overpass-instance-error"));
+                console.error(data);
             }
-        },
-        "json"
+        }
     );
 };
+
+OSMExtractorDialog.prototype._createAndPopulateKeyAndValue = function () {
+    const elementKeyInput = $('<input>').appendTo('body');
+    elementKeyInput.attr("id", "selectKey");
+    elementKeyInput.attr("type", "text");
+    elementKeyInput.attr("name", "osmKey");
+    elementKeyInput.attr("list", "osmKeys");
+    elementKeyInput.appendTo($("#query-select-tag-key")[0]);
+
+    const elementKeyDataList = $('<datalist>').appendTo('body');
+    elementKeyDataList.attr("id", "osmKeys");
+    elementKeyDataList.appendTo(elementKeyInput);
+
+    const elementValueInput = $('<input>').appendTo('body');
+    elementValueInput.attr("id", "selectValue");
+    elementValueInput.attr("type", "text");
+    elementValueInput.attr("name", "osmValue");
+    elementValueInput.attr("list", "osmValues");
+    elementValueInput.appendTo($("#query-select-tag-value")[0]);
+
+    const elementValueDataList = $('<datalist>').appendTo('body');
+    elementValueDataList.attr("id", "osmValues");
+    elementValueDataList.appendTo(elementValueInput);
+
+    $.getJSON(
+        "command/osm-extractor/get-osm-tags",
+        null,
+        function (data) {
+            if (data.tags && data.tags.length > 0) {
+                var osmTags = data.tags;
+
+                for (const tag of osmTags) {
+                    elementKeySelect.append($("<option>").val(tag).text(tag));
+                }
+
+            } else {
+                window.alert($.i18n("osm-extractor/osm-tags-error"));
+                console.error(data);
+            }
+        }
+    );
+}
 
 OSMExtractorDialog.prototype._dismiss = function () {
     DialogSystem.dismissUntil(this._level - 1);

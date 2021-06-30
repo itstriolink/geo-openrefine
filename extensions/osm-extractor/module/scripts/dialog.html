@@ -1,7 +1,7 @@
 <div class="dialog-frame" style="width: 800px;">
     <div class="dialog-header" bind="dialogHeader"></div>
     <div class="dialog-body" bind="dialogBody">
-        <div id="custom-tabular-exporter-tabs" class="refine-tabs">
+        <div id="osm-extractor-tabs" class="refine-tabs">
             <ul>
                 <li><a href="#tabs-query" bind="dialogQuery"></a></li>
                 <li><a href="#tabs-raw-query" bind="dialogRawQuery"></a></li>
@@ -13,212 +13,52 @@
                 <div class="grid-layout grid-layout-for-ui layout-normal layout-full">
                     <table>
                         <tr>
-                            <td bind="or_dialog_selAndOrd"></td>
-                            <td><span bind="or_dialog_optFor"></span><span bind="columnNameSpan"
-                                                                           class="custom-tabular-exporter-selected-column"></span>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td width="40%">
-                                <div bind="columnList" class="custom-tabular-exporter-columns"></div>
-                            </td>
                             <td>
-                                <div bind="columnOptionPane" class="custom-tabular-exporter-column-options">
-                                    <div class="grid-layout layout-normal">
-                                        <table>
-                                            <tr>
-                                                <td colspan="2" bind="or_dialog_forReconCell"></td>
-                                            </tr>
-                                            <tr>
-                                                <td>
-                                                    <div class="grid-layout layout-tightest">
-                                                        <table>
-                                                            <tr>
-                                                                <td width="1%"><input type="radio"
-                                                                                      name="custom-tabular-exporter-recon"
-                                                                                      value="entity-name"
-                                                                                      id="$custom-exporter-recon-entity-name"/>
-                                                                </td>
-                                                                <td><label for="$custom-exporter-recon-entity-name"
-                                                                           bind="or_dialog_matchedName"></label></td>
-                                                                <td width="1%"><input type="radio"
-                                                                                      name="custom-tabular-exporter-recon"
-                                                                                      value="cell-content"
-                                                                                      id="$custom-exporter-recon-cell-content"/>
-                                                                </td>
-                                                                <td><label for="$custom-exporter-recon-cell-content"
-                                                                           bind="or_dialog_cellCont"></label></td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td width="1%"><input type="radio"
-                                                                                      name="custom-tabular-exporter-recon"
-                                                                                      value="entity-id"
-                                                                                      id="$custom-exporter-recon-entity-id"/>
-                                                                </td>
-                                                                <td><label for="$custom-exporter-recon-entity-id"
-                                                                           bind="or_dialog_matchedId"></label></td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td width="1%"><input type="checkbox"
-                                                                                      bind="reconLinkCheckbox"
-                                                                                      id="$custom-exporter-recon-link"/>
-                                                                </td>
-                                                                <td width="50%"><label for="$custom-exporter-recon-link"
-                                                                                       bind="or_dialog_linkMatch"></label>
-                                                                </td>
-                                                                <td width="1%"><input type="checkbox"
-                                                                                      bind="reconBlankUnmatchedCheckbox"
-                                                                                      id="$custom-exporter-recon-blank-unmatched"/>
-                                                                </td>
-                                                                <td width="50%"><label
-                                                                        for="$custom-exporter-recon-blank-unmatched"
-                                                                        bind="or_dialog_outNotUnMatch"></label></td>
-                                                            </tr>
-                                                        </table>
-                                                </td>
-                                            </tr>
-
-                                            <tr>
-                                                <td colspan="2" bind="or_dialog_dateFormat"></td>
-                                            </tr>
-                                            <tr>
-                                                <td>
-                                                    <div class="grid-layout layout-tightest">
-                                                        <table>
-                                                            <tr>
-                                                                <td width="1%"><input type="radio"
-                                                                                      name="custom-tabular-exporter-date"
-                                                                                      value="iso-8601"
-                                                                                      id="$custom-exporter-date-iso"/>
-                                                                </td>
-                                                                <td colspan="3"><label for="$custom-exporter-date-iso"
-                                                                                       bind="or_dialog_dateIso"></label>
-                                                                </td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td width="1%"><input type="radio"
-                                                                                      name="custom-tabular-exporter-date"
-                                                                                      value="locale-short"
-                                                                                      id="$custom-exporter-date-locale-short"/>
-                                                                </td>
-                                                                <td width="50%"><label
-                                                                        for="$custom-exporter-date-locale-short"
-                                                                        bind="or_dialog_shortFormat"></label></td>
-                                                                <td width="1%"><input type="radio"
-                                                                                      name="custom-tabular-exporter-date"
-                                                                                      value="locale-medium"
-                                                                                      id="$custom-exporter-date-locale-medium"/>
-                                                                </td>
-                                                                <td width="50%"><label
-                                                                        for="$custom-exporter-date-locale-medium"
-                                                                        bind="or_dialog_mediumFormat"></label></td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td width="1%"><input type="radio"
-                                                                                      name="custom-tabular-exporter-date"
-                                                                                      value="locale-long"
-                                                                                      id="$custom-exporter-date-locale-long"/>
-                                                                </td>
-                                                                <td width="50%"><label
-                                                                        for="$custom-exporter-date-locale-long"
-                                                                        bind="or_dialog_longFormat"></label></td>
-                                                                <td width="1%"><input type="radio"
-                                                                                      name="custom-tabular-exporter-date"
-                                                                                      value="locale-full"
-                                                                                      id="$custom-exporter-date-locale-full"/>
-                                                                </td>
-                                                                <td width="50%"><label
-                                                                        for="$custom-exporter-date-locale-full"
-                                                                        bind="or_dialog_fullFormat"></label></td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td width="1%"><input type="radio"
-                                                                                      name="custom-tabular-exporter-date"
-                                                                                      value="custom"
-                                                                                      id="$custom-exporter-date-custom"/>
-                                                                </td>
-                                                                <td colspan="3">
-                                                                    <label for="$custom-exporter-date-custom"
-                                                                           bind="or_dialog_custom"></label> <input
-                                                                        size="35" class="lightweight"
-                                                                        bind="dateCustomInput"/>
-                                                                    <a href="https://docs.oracle.com/javase/8/docs/api/java/text/SimpleDateFormat.html"
-                                                                       target="_blank" bind="or_dialog_help"></a>
-                                                                </td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td width="1%"><input type="checkbox"
-                                                                                      bind="dateLocalTimeZoneCheckbox"
-                                                                                      id="$custom-exporter-date-local-timezone"/>
-                                                                </td>
-                                                                <td width="50%"><label
-                                                                        for="$custom-exporter-date-local-timezone"
-                                                                        bind="or_dialog_localTime"></label></td>
-                                                                <td width="1%"><input type="checkbox"
-                                                                                      bind="omitTimeCheckbox"
-                                                                                      id="$custom-exporter-date-omit-time"/>
-                                                                </td>
-                                                                <td width="50%"><label
-                                                                        for="$custom-exporter-date-omit-time"
-                                                                        bind="or_dialog_omitTime"></label></td>
-                                                            </tr>
-                                                        </table>
-                                                </td>
-                                            </tr>
-                                        </table>
-                                    </div>
-                                </div>
+                                <label for="selectKey" bind="selectKey"/>
                             </td>
+                            <td id="query-select-tag-key" />
                         </tr>
                         <tr>
-                            <td colspan="2">
-                                <button class="button" bind="selectAllButton"></button>
-                                <button class="button" bind="deselectAllButton"></button>
+                            <td>
+                                <label for="selectValue" bind="selectValue"/>
                             </td>
+                            <td id="query-select-tag-value" />
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            <div id="tabs-raw-query" style="display: none;">
+                <div class="grid-layout grid-layout-for-ui layout-loose layout-full">
+                    <table>
+                        <tr>
+                            <th>
+                                <span bind="enterRawQuery"/>
+                            </th>
                         </tr>
                         <tr>
-                            <td colspan="2">
-                                <div class="grid-layout layout-tighter layout-full">
-                                    <table>
+                            <td width="60%">
+                                <textarea class="raw-query-code"
+                                          bind="rawQueryInput"/>
+                            </td>
+                            <td width="40%">
+                                <div class="column-list-container">
+                                    <table id="raw-query-response-table" bind = "columnList" width="100%">
+                                        <thead class="header">
                                         <tr>
-                                            <td width="1%"><input type="checkbox" bind="outputColumnHeadersCheckbox"
-                                                                  checked id="$custom-exporter-output-column-headers"/>
-                                            </td>
-                                            <td width="25%"><label for="$custom-exporter-output-column-headers"
-                                                                   bind="or_dialog_outColHeader"></label></td>
-                                            <td width="1%"><input type="checkbox" bind="outputEmptyRowsCheckbox"
-                                                                  id="$custom-exporter-output-empty-rows"/></td>
-                                            <td width="25%"><label for="$custom-exporter-output-empty-rows"
-                                                                   bind="or_dialog_outEmptyRow"></label></td>
-                                            <td width="1%"><input type="checkbox" bind="exportAllRowsCheckbox"
-                                                                  id="$custom-exporter-output-all-rows"/></td>
-                                            <td width="50%"><label for="$custom-exporter-output-all-rows"
-                                                                   bind="or_dialog_ignoreFacets"></label></td>
+                                            <th width="100px">Tag Name</th>
+                                            <th width="100px">New Column Name</th>
                                         </tr>
+                                        </thead>
                                     </table>
                                 </div>
                             </td>
                         </tr>
-                    </table>
-                </div>
-            </div>
-            <div id="tabs-raw-query" style="display: none;">
-                <div class="grid-layout grid-layout-for-ui layout-loose layout-full">
-                    <table>
-                        <tr>
-                            <td colspan="2">
-                                <textarea class="raw-query-code"
-                                          bind="rawQueryInput"/>
-                            </td>
-                        </tr>
-                    </table>
-                </div>
-            </div>
-            <div id="tabs-raw-query" style="display: none;">
-                <div class="grid-layout grid-layout-for-ui layout-loose layout-full">
-                    <table>
                         <tr>
                             <td>
+                                <button type="button" id="runRawQuery" bind="runRawQueryButton" class="button-secondary pure-button"/>
+                            </td>
+                            <td>
+                                <button type="button" id="saveRawQuery" bind="saveRawQueryButton" class="button-secondary pure-button"/>
                             </td>
                         </tr>
                     </table>
@@ -228,10 +68,8 @@
                 <div class="grid-layout grid-layout-for-ui layout-loose layout-full">
                     <table>
                         <tr>
-                            <th><label for="selectInstance" bind="selectInstance" /></th>
-                        </tr>
-                        <tr>
-                            <td id="select-overpass-instance" />
+                            <th width="30%" style="vertical-align: middle;"><label for="selectInstance" bind="selectInstance"/></th>
+                            <td width="70%" id="settings-select-overpass-instance"/>
                         </tr>
                     </table>
                 </div>

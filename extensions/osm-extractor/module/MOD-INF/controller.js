@@ -43,6 +43,7 @@ var ClientSideResourceManager = Packages.com.google.refine.ClientSideResourceMan
 function registerCommands() {
     var RefineServlet = Packages.com.google.refine.RefineServlet;
     RefineServlet.registerCommand(module, "get-overpass-instances", new Packages.com.google.refine.osmextractor.commands.GetInstancesCommand());
+    RefineServlet.registerCommand(module, "add-osm-data-to-project", new Packages.com.google.refine.osmextractor.commands.AddOSMDataToProjectCommand());
 }
 
 function init() {

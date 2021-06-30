@@ -6,3 +6,47 @@
     height: 25em;
     resize: vertical;
 }
+
+#osm-extractor-tabs{
+    .ui-tabs-panel {
+        padding: @padding_looser;
+    }
+
+    select {
+        padding: @padding_tighter;
+        font-size: 1em;
+        width: 250px;
+        font-family: inherit;
+        border: #ccc 1px solid;
+        border-top: #888 1px solid;
+        vertical-align: baseline;
+    }
+}
+
+.osm-extractor-dialog-row {
+    margin-top: 2px;
+    padding-top: 2px;
+    margin-bottom: 2px;
+    margin-top: 2px;
+
+    td {
+        padding: 3px;
+        margin: 3px;
+        -moz-border-radius: 5px;
+        -webkit-border-radius: 5px;
+        border-radius: 5px;
+    }
+}
+
+.osm-extractor-columns {
+    overflow-y: auto;
+    border: 1px solid @chrome_primary;
+    padding: @padding_loose;
+    height: 22em;
+    border-radius: 4px;
+}
+
+.column-list-container{
+    height: 25em;
+    overflow-y: auto;
+}

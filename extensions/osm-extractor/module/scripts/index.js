@@ -46,11 +46,14 @@ $.ajax({
 });
 $.i18n().load(dictionary, lang);
 
-//Temporary location
-ExporterManager.MenuItems.push({}, {
-    "id": "osm-extractor",
-    "label": $.i18n('osm-extractor/osm-extractor'),
-    "click": function () {
-        new OSMExtractorDialog();
-    }
+DataTableColumnHeaderUI.extendMenu(function(column, columnHeaderUI, menu) {
+    MenuSystem.insertAfter(menu, ["core/edit-column", "core/add-column-by-reconciliation"], [
+        {
+            "id": "osm-extractor/osm-extractor",
+            "label": $.i18n('osm-extractor/add-column-from-osm'),
+            "click": function () {
+                new OSMExtractorDialog();
+            }
+        },
+    ]);
 });

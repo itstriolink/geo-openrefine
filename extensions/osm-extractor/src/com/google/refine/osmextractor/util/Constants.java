@@ -8,8 +8,8 @@ import java.util.List;
 public final class Constants {
     public static final List<String> OVERPASS_INSTANCES = Collections.unmodifiableList(
             new ArrayList<String>() {{
-                add("https://lz4.overpass-api.de/api/");
-                add("https://z.overpass-api.de/api/");
+                add("https://lz4.overpass-api.de/api/interpreter");
+                add("https://z.overpass-api.de/api/interpreter");
                 add("https://overpass.openstreetmap.ru/api/interpreter");
                 add("https://overpass.openstreetmap.fr/api/interpreter");
                 add("https://overpass.osm.ch/api/interpreter");
