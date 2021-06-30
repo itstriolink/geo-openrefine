@@ -1,0 +1,90 @@
+<div class="dialog-frame" style="width: 800px;">
+    <div class="dialog-header" bind="dialogHeader"></div>
+    <div class="dialog-body" bind="dialogBody">
+        <div id="osm-extractor-tabs" class="refine-tabs">
+            <ul>
+                <li><a href="#tabs-query" bind="dialogQuery"></a></li>
+                <li><a href="#tabs-raw-query" bind="dialogRawQuery"></a></li>
+                <li><a href="#tabs-settings" bind="dialogSettings"></a></li>
+
+            </ul>
+
+            <div id="tabs-query">
+                <div class="grid-layout grid-layout-for-ui layout-normal layout-full">
+                    <table>
+                        <tr>
+                            <td>
+                                <label for="selectKey" bind="selectKey"/>
+                            </td>
+                            <td id="query-select-tag-key" />
+                        </tr>
+                        <tr>
+                            <td>
+                                <label for="selectValue" bind="selectValue"/>
+                            </td>
+                            <td id="query-select-tag-value" />
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            <div id="tabs-raw-query" style="display: none;">
+                <div class="grid-layout grid-layout-for-ui layout-loose layout-full">
+                    <table>
+                        <tr>
+                            <th>
+                                <span bind="enterRawQuery"/>
+                            </th>
+                        </tr>
+                        <tr>
+                            <td width="60%">
+                                <textarea class="raw-query-code"
+                                          bind="rawQueryInput"/>
+                            </td>
+                            <td width="40%">
+                                <div class="column-list-container">
+                                    <table id="raw-query-response-table" bind = "columnList" width="100%">
+                                        <thead class="header">
+                                        <tr>
+                                            <th width="100px">Tag Name</th>
+                                            <th width="100px">New Column Name</th>
+                                        </tr>
+                                        </thead>
+                                    </table>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <button type="button" id="runRawQuery" bind="runRawQueryButton" class="button-secondary pure-button"/>
+                            </td>
+                            <td>
+                                <button type="button" id="saveRawQuery" bind="saveRawQueryButton" class="button-secondary pure-button"/>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            <div id="tabs-settings" style="display: none;">
+                <div class="grid-layout grid-layout-for-ui layout-loose layout-full">
+                    <table>
+                        <tr>
+                            <th width="30%" style="vertical-align: middle;"><label for="selectInstance" bind="selectInstance"/></th>
+                            <td width="70%" id="settings-select-overpass-instance"/>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="dialog-footer" bind="dialogFooter">
+        <div class="grid-layout layout-tightest layout-full">
+            <table>
+                <tr>
+                    <td style="text-align: right;">
+                        <button class="button" bind="cancelButton"></button>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</div>

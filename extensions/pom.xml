@@ -25,7 +25,7 @@
         <module>pc-axis</module>
         <module>phonetic</module>
         <module>geojson</module>
-        <module>osm-overpass</module>
+        <module>osm-extractor</module>
   </modules>
 
   <build>
