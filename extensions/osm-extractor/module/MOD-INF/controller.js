@@ -46,6 +46,16 @@ function registerCommands() {
     RefineServlet.registerCommand(module, "add-osm-data-to-project", new Packages.com.google.refine.osmextractor.commands.AddOSMDataToProjectCommand());
 }
 
+function registerControllers() {
+    var IM = Packages.com.google.refine.importing.ImportingManager;
+
+    IM.registerController(
+        module,
+        "osm-data-importing-controller",
+        new Packages.com.google.refine.osmextractor.controllers.OSMDataImportingController()
+    );
+}
+
 function init() {
 
   Packages.java.lang.System.out.println("Initializing OSM extension...");
@@ -61,6 +71,15 @@ function init() {
       ]
   );
 
+  ClientSideResourceManager.addPaths(
+      "index/scripts",
+      module,
+      [
+          "scripts/index.js",
+          "scripts/osm-import-ui.js"
+      ]
+  )
+
   // Style files to inject into /project page
   ClientSideResourceManager.addPaths(
       "project/styles",
@@ -70,7 +89,16 @@ function init() {
       ]
   );
 
+    ClientSideResourceManager.addPaths(
+        "index/styles",
+        module,
+        [
+            "styles/osm-import-form.less"
+        ]
+    );
+
   registerCommands();
+  registerControllers();
   //registerExporters();
 }
 

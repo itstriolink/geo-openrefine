@@ -46,14 +46,383 @@ $.ajax({
 });
 $.i18n().load(dictionary, lang);
 
-DataTableColumnHeaderUI.extendMenu(function(column, columnHeaderUI, menu) {
-    MenuSystem.insertAfter(menu, ["core/edit-column", "core/add-column-by-reconciliation"], [
-        {
-            "id": "osm-extractor/osm-extractor",
-            "label": $.i18n('osm-extractor/add-column-from-osm'),
-            "click": function () {
-                new OSMExtractorDialog();
-            }
+Refine.OSMImportingController = function (createProjectUI) {
+
+    this._createProjectUI = createProjectUI;
+
+    this._parsingPanel = createProjectUI.addCustomPanel();
+    createProjectUI.addSourceSelectionUI({
+        label: "OpenStreetMap (using Overpass)",
+        id: "openstreetmap-overpass",
+        ui: new Refine.OSMImportUI(this)
+    });
+};
+
+Refine.OSMImportingController._overpassQuery = null;
+Refine.OSMImportingController._overpassInstance = null;
+// DataTableColumnHeaderUI.extendMenu(function(column, columnHeaderUI, menu) {
+//     MenuSystem.insertAfter(menu, ["core/edit-column", "core/add-column-by-reconciliation"], [
+//         {
+//             "id": "osm-extractor/osm-extractor",
+//             "label": $.i18n('osm-extractor/add-columns-from-osm'),
+//             "click": function () {
+//                 new OSMExtractorDialog();
+//             }
+//         },
+//     ]);
+// });
+
+Refine.CreateProjectUI.controllers.push(Refine.OSMImportingController);
+
+Refine.OSMImportingController.prototype.startImportingData = function (overpassQuery, overpassInstance) {
+    var dismiss = DialogSystem.showBusy($.i18n('osm-extractor/preparing'));
+    var self = this;
+    self._overpassQuery = overpassQuery;
+    self._overpassInstance = overpassInstance;
+    Refine.postCSRF(
+        "command/core/create-importing-job",
+        null,
+        function (data) {
+            Refine.wrapCSRF(function (token) {
+                $.post(
+                    "command/core/importing-controller?" + $.param({
+                        "controller": "osm-extractor/osm-data-importing-controller",
+                        "subCommand": "initialize-parser-ui",
+                        "overpassQuery": overpassQuery,
+                        "overpassInstance": overpassInstance,
+                        "csrf_token": token
+                    }),
+                    null,
+                    function (data2) {
+                        dismiss();
+
+                        if (data2.status == 'ok') {
+                            self._options = data2.options;
+                            self._jobID = data.jobID;
+                            self._showParsingPanel();
+                        } else {
+                            alert(data2.message);
+                        }
+                    },
+                    "json"
+                );
+            });
         },
-    ]);
-});
+        "json"
+    );
+};
+
+Refine.OSMImportingController.prototype._showParsingPanel = function () {
+    var self = this;
+
+    this._parsingPanel.unbind().empty().html(
+        DOM.loadHTML("osm-extractor", 'scripts/osm-parsing-panel.html'));
+    this._parsingPanelElmts = DOM.bind(this._parsingPanel);
+
+    //this._parsingPanelElmts.gdata_worksheet.html($.i18n('gdata-parsing/worksheet'));
+    //this._parsingPanelElmts.gdata_ignore_first.html($.i18n('gdata-parsing/ignore-first'));
+    //this._parsingPanelElmts.gdata_ignore.html($.i18n('gdata-parsing/ignore'));
+    //this._parsingPanelElmts.gdata_parse_next.html($.i18n('gdata-parsing/parse-next'));
+    //this._parsingPanelElmts.gdata_parse.html($.i18n('gdata-parsing/parse'));
+    this._parsingPanelElmts.startOverButton.html($.i18n('gdata-parsing/start-over'));
+    this._parsingPanelElmts.gdata_conf_pars.html($.i18n('gdata-parsing/conf-pars'));
+    this._parsingPanelElmts.gdata_proj_name.html($.i18n('gdata-parsing/proj-name'));
+    this._parsingPanelElmts.createProjectButton.html($.i18n('gdata-parsing/create-proj'));
+    //this._parsingPanelElmts.gdata_options.html($.i18n('gdata-parsing/option'));
+    //this._parsingPanelElmts.previewButton.html($.i18n('gdata-parsing/preview-button'));
+    this._parsingPanelElmts.gdata_updating.html($.i18n('gdata-parsing/updating-preview'));
+    //this._parsingPanelElmts.gdata_discard_next.html($.i18n('gdata-parsing/discard-next'));
+    //this._parsingPanelElmts.gdata_discard.html($.i18n('gdata-parsing/discard'));
+    //this._parsingPanelElmts.gdata_limit_next.html($.i18n('gdata-parsing/limit-next'));
+    //this._parsingPanelElmts.gdata_limit.html($.i18n('gdata-parsing/limit'));
+    //this._parsingPanelElmts.gdata_store_row.html($.i18n('gdata-parsing/store-row'));
+    //this._parsingPanelElmts.gdata_store_cell.html($.i18n('gdata-parsing/store-cell'));
+
+    if (this._parsingPanelResizer) {
+        $(window).unbind('resize', this._parsingPanelResizer);
+    }
+
+    this._parsingPanelResizer = function () {
+        var elmts = self._parsingPanelElmts;
+        var width = self._parsingPanel.width();
+        var height = self._parsingPanel.height();
+        var headerHeight = elmts.wizardHeader.outerHeight(true);
+        var controlPanelHeight = 250;
+
+        // elmts.dataPanel
+        //     .css("left", "0px")
+        //     .css("top", headerHeight + "px")
+        //     .css("width", (width - DOM.getHPaddings(elmts.dataPanel)) + "px")
+        //     .css("height", (height - headerHeight - controlPanelHeight - DOM.getVPaddings(elmts.dataPanel)) + "px");
+        elmts.progressPanel
+            .css("left", "0px")
+            .css("top", headerHeight + "px")
+            .css("width", (width - DOM.getHPaddings(elmts.progressPanel)) + "px")
+            .css("height", (height - headerHeight - controlPanelHeight - DOM.getVPaddings(elmts.progressPanel)) + "px");
+
+        // elmts.controlPanel
+        //     .css("left", "0px")
+        //     .css("top", (height - controlPanelHeight) + "px")
+        //     .css("width", (width - DOM.getHPaddings(elmts.controlPanel)) + "px")
+        //     .css("height", (controlPanelHeight - DOM.getVPaddings(elmts.controlPanel)) + "px");
+    };
+    $(window).resize(this._parsingPanelResizer);
+    this._parsingPanelResizer();
+
+    this._parsingPanelElmts.startOverButton.click(function () {
+        // explicitly cancel the import job
+        Refine.CreateProjectUI.cancelImportingJob(self._jobID);
+
+        delete self._doc;
+        delete self._jobID;
+        delete self._options;
+
+        self._createProjectUI.showSourceSelectionPanel();
+    });
+    this._parsingPanelElmts.createProjectButton.click(function () {
+        self._createProject();
+    });
+    // this._parsingPanelElmts.previewButton.click(function () {
+    //     self._updatePreview();
+    // });
+
+    this._parsingPanelElmts.projectNameInput[0].value = "OpenstreetMap project";
+
+    // if (this._doc.type != 'table') {
+    //     var sheetTable = this._parsingPanelElmts.sheetRecordContainer[0];
+    //     $.each(this._options.worksheets, function(i, v) {
+    //         var id = 'gdata_worksheet-' + Math.round(Math.random() * 1000000);
+    //
+    //         var tr = sheetTable.insertRow(sheetTable.rows.length);
+    //         var td0 = $(tr.insertCell(0)).attr('width', '1%');
+    //         var checkbox = $('<input>')
+    //             .attr('id', id)
+    //             .attr('type', 'radio')
+    //             .attr('name', 'gdata-importing-parsing-worksheet')
+    //             .attr('sheetUrl', this.link)
+    //             .attr('worksheetIndex', this.worksheetIndex)
+    //             .appendTo(td0);
+    //         if (i === 0) {
+    //             checkbox.prop("checked", true);
+    //         }
+    //
+    //         $('<label>')
+    //             .attr('for', id)
+    //             .text(this.name)
+    //             .appendTo(tr.insertCell(1));
+    //
+    //         $('<label>')
+    //             .attr('for', id)
+    //             .text(this.rows + ' rows')
+    //             .appendTo(tr.insertCell(2));
+    //     });
+    //
+    //     if (this._options.ignoreLines > 0) {
+    //         this._parsingPanelElmts.ignoreCheckbox.prop("checked", true);
+    //         this._parsingPanelElmts.ignoreInput[0].value = this._options.ignoreLines.toString();
+    //     }
+    //     if (this._options.headerLines > 0) {
+    //         this._parsingPanelElmts.headerLinesCheckbox.prop("checked", true);
+    //         this._parsingPanelElmts.headerLinesInput[0].value = this._options.headerLines.toString();
+    //     }
+    // }
+
+    // if (this._options.limit > 0) {
+    //     this._parsingPanelElmts.limitCheckbox.prop("checked", true);
+    //     this._parsingPanelElmts.limitInput[0].value = this._options.limit.toString();
+    // }
+    // if (this._options.skipDataLines > 0) {
+    //     this._parsingPanelElmts.skipCheckbox.prop("checked", true);
+    //     this._parsingPanelElmts.skipInput.value[0].value = this._options.skipDataLines.toString();
+    // }
+    // if (this._options.storeBlankRows) {
+    //     this._parsingPanelElmts.storeBlankRowsCheckbox.prop("checked", true);
+    // }
+    // if (this._options.storeBlankCellsAsNulls) {
+    //     this._parsingPanelElmts.storeBlankCellsAsNullsCheckbox.prop("checked", true);
+    // }
+
+    this._createProjectUI.showCustomPanel(this._parsingPanel);
+    this._updatePreview();
+}
+
+Refine.OSMImportingController.prototype._updatePreview = function () {
+    var self = this;
+
+    this._parsingPanelElmts.dataPanel.hide();
+    this._parsingPanelElmts.progressPanel.show();
+
+    Refine.wrapCSRF(function (token) {
+        $.post(
+            "command/core/importing-controller?" + $.param({
+                "controller": "osm-extractor/osm-data-importing-controller",
+                "jobID": self._jobID,
+                "subCommand": "parse-preview",
+                "overpassQuery": self._overpassQuery,
+                "overpassInstance": self._overpassInstance,
+                "csrf_token": token
+            }),
+            null,
+            function (result) {
+                if (result.status == "ok") {
+                        self._parsingPanelElmts.progressPanel.hide();
+                        self._parsingPanelElmts.dataPanel.show();
+                    var tags = result.tags;
+                    if (tags && tags.length > 0) {
+                        const columns = tags;
+                        $(".osm-extractor-dialog-row").remove();
+                        for (var i = 0; i < columns.length; i++) {
+                            var column = columns[i];
+                            var row = $('<tr>')
+                                .addClass("osm-extractor-dialog-row")
+                                .addClass(i % 2 == 0 ? "odd" : "even")
+                                .attr("column", column)
+                                .attr("rowIndex", i)
+                                .appendTo(self._parsingPanelElmts.columnList);
+
+                            var indexCell = $('<td>')
+                                .appendTo(row);
+
+                            var tagNameCell = $('<td>').appendTo(row);
+                            var tagNameDiv = $('<div>').addClass("data-table-cell-content").appendTo(tagNameCell);
+                            $('<div>')
+                                .text((i + 1) + ".")
+                                .attr("rowIndex", i)
+                                .appendTo(indexCell);
+
+                            $('<input>')
+                                .attr('type', 'checkbox')
+                                .attr("id", "checkbox-" + i)
+                                .attr("class", "includeTagCheckbox")
+                                .prop('checked', true)
+                                .attr("rowIndex", i)
+                                .appendTo(tagNameDiv);
+                            $('<span>')
+                                .text(column)
+                                .attr("class", "osmTagName")
+                                .attr("rowIndex", i)
+                                .appendTo(tagNameDiv);
+
+                            var newColumnNameCell = $('<td>').appendTo(row);
+                            var newColumnNameDiv = $('<div>').addClass("data-table-cell-content").appendTo(newColumnNameCell);
+
+                            $('<input>')
+                                .attr('type', 'text')
+                                .attr("class", "newColumnName")
+                                .attr("id", "newColumnInput-" + i)
+                                .attr("rowIndex", i)
+                                .val(column)
+                                .appendTo(newColumnNameDiv);
+
+
+                            $("#checkbox-" + i).click(function () {
+                                var index = this.getAttribute('rowIndex');
+                                if (this.checked) {
+                                    $("#newColumnInput-" + index).attr("disabled", false);
+                                } else {
+                                    $("#newColumnInput-" + index).attr("disabled", true);
+                                }
+                            });
+                        }
+                    }
+                } else {
+                    self._parsingPanelElmts.progressPanel.hide();
+                    alert('Errors:\n' +
+                    (result.message) ? result.message : Refine.CreateProjectUI.composeErrorMessage(job));
+                }
+            },
+            "json"
+        );
+    });
+}
+
+Refine.OSMImportingController.prototype._createProject = function () {
+    var projectName = $.trim(this._parsingPanelElmts.projectNameInput[0].value);
+    if (projectName.length == 0) {
+        window.alert("Please enter a valid project name.");
+        this._parsingPanelElmts.projectNameInput.focus();
+        return;
+    }
+
+    var self = this;
+    var options = {
+        "projectName": projectName,
+        "encoding": "UTF-8"
+    }
+    var mappings = [];
+
+    $('#raw-query-response-table tbody tr').each(function () {
+        var row = $(this);
+        var checkbox = row.find('input.includeTagCheckbox')[0];
+        var osmTag = row.find('span.osmTagName').html();
+        var newColumnName = row.find('input.newColumnName').val();
+
+        if (checkbox && checkbox.checked) {
+            mappings.push({
+                osmTag,
+                newColumnName,
+            });
+        }
+    });
+    Refine.wrapCSRF(function(token) {
+        $.post(
+            "command/core/importing-controller?" + $.param({
+                "controller": "osm-extractor/osm-data-importing-controller",
+                "jobID": self._jobID,
+                "subCommand": "create-project",
+                "csrf_token": token
+            }),
+            {
+                "options": JSON.stringify(options),
+                "mappings": JSON.stringify(mappings)
+            },
+            function(o) {
+                if (o.status == 'error') {
+                    alert(o.message);
+                } else {
+                    var start = new Date();
+                    var timerID = window.setInterval(
+                        function() {
+                            self._createProjectUI.pollImportJob(
+                                start,
+                                self._jobID,
+                                timerID,
+                                function(job) {
+                                    return "projectID" in job.config;
+                                },
+                                function(jobID, job) {
+                                    window.clearInterval(timerID);
+                                    Refine.CreateProjectUI.cancelImportingJob(jobID);
+                                    document.location = "project?project=" + job.config.projectID;
+                                },
+                                function(job) {
+                                    alert(Refine.CreateProjectUI.composeErrorMessage(job));
+                                }
+                            );
+                        },
+                        1000
+                    );
+                    self._createProjectUI.showImportProgressPanel($.i18n('gdata-import/creating'), function() {
+                        // stop the timed polling
+                        window.clearInterval(timerID);
+
+                        // explicitly cancel the import job
+                        Refine.CreateProjectUI.cancelImportingJob(jobID);
+
+                        self._createProjectUI.showSourceSelectionPanel();
+                    });
+                }
+            },
+            "json"
+        );
+    });
+}
+
+Refine.OSMImportingController.prototype._getOptions = function () {
+    var options = {
+        // docUrl: this._doc.docSelfLink,
+        // docType: this._doc.type,
+    };
+
+    return options;
+};

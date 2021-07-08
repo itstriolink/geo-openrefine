@@ -17,11 +17,9 @@ import org.slf4j.LoggerFactory;
 import java.util.Properties;
 
 public class AddOSMDataToProjectOperation extends EngineDependentOperation {
+    static final Logger logger = LoggerFactory.getLogger(AddOSMDataToProjectOperation.class);
     final protected ArrayNode _mappings;
     final protected ArrayNode _data;
-
-
-    static final Logger logger = LoggerFactory.getLogger(AddOSMDataToProjectOperation.class);
 
     @JsonCreator
     public AddOSMDataToProjectOperation(
@@ -106,7 +104,7 @@ public class AddOSMDataToProjectOperation extends EngineDependentOperation {
                                             String osmTag = obj.get("osmTag").asText();
                                             String value = null;
 
-                                            if(tags.has(osmTag)) {
+                                            if (tags.has(osmTag)) {
                                                 value = tags.get(osmTag).asText();
                                             }
 
