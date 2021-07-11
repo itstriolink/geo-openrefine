@@ -1,6 +1,5 @@
 package com.google.refine.osmextractor.controllers;
 
-import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -24,14 +23,17 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.io.Writer;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Properties;
 
 public class OSMDataImportingController implements ImportingController {
     private static final Logger logger = LoggerFactory.getLogger("OSMDataImportingController");
     protected RefineServlet servlet;
-    private String overpassInstance;
-    private String overpassQuery;
+    protected String overpassInstance;
+    protected String overpassQuery;
+    protected ArrayNode elements;
 
     @Override
     public void init(RefineServlet servlet) {
@@ -40,13 +42,14 @@ public class OSMDataImportingController implements ImportingController {
 
     @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
+            throws IOException {
         HttpUtilities.respond(response, "error", "GET not implemented");
     }
 
 
     @Override
-    public void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    public void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
         Properties parameters = ParsingUtilities.parseUrlParameters(request);
         response.setCharacterEncoding("UTF-8");
         String subCommand = parameters.getProperty("subCommand");
@@ -58,7 +61,7 @@ public class OSMDataImportingController implements ImportingController {
         } else if ("create-project".equals(subCommand)) {
             doCreateProject(request, response, parameters);
         } else {
-            HttpUtilities.respond(response, "error", "No such sub command");
+            HttpUtilities.respond(response, "error", "No such sub command implemented");
         }
     }
 
@@ -66,14 +69,7 @@ public class OSMDataImportingController implements ImportingController {
             HttpServletRequest request, HttpServletResponse response, Properties parameters)
             throws ServletException, IOException {
         ObjectNode result = ParsingUtilities.mapper.createObjectNode();
-        ObjectNode options = ParsingUtilities.mapper.createObjectNode();
-
         JSONUtilities.safePut(result, "status", "ok");
-        JSONUtilities.safePut(result, "options", options);
-        JSONUtilities.safePut(options, "skipDataLines", 0); // number of initial data lines to skip
-        JSONUtilities.safePut(options, "storeBlankRows", true);
-        JSONUtilities.safePut(options, "storeBlankCellsAsNulls", true);
-
 
         HttpUtilities.respond(response, result.toString());
     }
@@ -86,73 +82,61 @@ public class OSMDataImportingController implements ImportingController {
             HttpUtilities.respond(response, "error", "Import job doesn't exist.");
             return;
         }
-
-        job.updating = true;
-        job.prepareNewProject();
         String overpassQuery = parameters.getProperty("overpassQuery");
         String overpassInstance = parameters.getProperty("overpassInstance");
+        if (overpassInstance == null || overpassInstance.trim().isEmpty()
+                || overpassQuery == null || overpassQuery.trim().isEmpty()) {
+            HttpUtilities.respond(response, "error", "Missing Overpass query or Overpass API instance");
+            return;
+        }
+        if (!Util.validateOverpassQuery(overpassQuery)) {
+            HttpUtilities.respond(response, "error", "Invalid Overpass QL query.");
+            return;
+        }
 
-        setProgress(job, -1);
+        job.updating = true;
+
         try {
+            job.prepareNewProject();
+            job.setProgress(-1, "Parsing OpenStreetMap data...");
+
             ArrayNode tagsNode = ParsingUtilities.mapper.createArrayNode();
-            if (overpassQuery != null && !overpassQuery.trim().isEmpty()
-                    && overpassInstance != null && !overpassInstance.trim().isEmpty()) {
-                if (!Util.validateOverpassQuery(overpassQuery)) {
-                    HttpUtilities.respond(response, "error", "Invalid Overpass QL query.");
-                    return;
+            ArrayNode coordinatesNode = ParsingUtilities.mapper.createArrayNode();
+
+            HttpClient httpClient = new HttpClient();
+            String overpassResponse = httpClient.postNameValue(overpassInstance, "data", overpassQuery);
+            this.overpassInstance = overpassInstance;
+            this.overpassQuery = overpassQuery;
+
+            ObjectNode object = ParsingUtilities.mapper.readValue(overpassResponse, ObjectNode.class);
+            ArrayNode elements = JSONUtilities.getArray(object, "elements");
+
+            this.elements = elements;
+            ObjectNode firstElement = JSONUtilities.getObjectElement(elements, 0);
+            ObjectNode result = ParsingUtilities.mapper.createObjectNode();
+
+            JSONUtilities.safePut(result, "status", "ok");
+            JSONUtilities.safePut(result, "tags", tagsNode);
+            JSONUtilities.safePut(result, "coordinates", coordinatesNode);
+
+            ObjectNode tags = JSONUtilities.getObject(firstElement, "tags");
+
+            if (tags != null) {
+                Iterator<Map.Entry<String, JsonNode>> fields = tags.fields();
+                while (fields.hasNext()) {
+                    Map.Entry<String, JsonNode> entry = fields.next();
+                    String name = entry.getKey();
+                    JSONUtilities.append(tagsNode, name);
                 }
-                this.overpassInstance = overpassInstance;
-                this.overpassQuery = overpassQuery;
-
-                try {
-                    HttpClient httpClient = new HttpClient();
-                    String _response = httpClient.postNameValue(overpassInstance, "data", overpassQuery);
-
-                    ObjectNode object = ParsingUtilities.mapper.readValue(_response, ObjectNode.class);
-                    ArrayNode elements = JSONUtilities.getArray(object, "elements");
-                    ObjectNode firstElement = JSONUtilities.getObjectElement(elements, 0);
-                    ObjectNode result = ParsingUtilities.mapper.createObjectNode();
-
-                    JSONUtilities.safePut(result, "status", "ok");
-                    JSONUtilities.safePut(result, "tags", tagsNode);
-                    ObjectNode tags = JSONUtilities.getObject(firstElement, "tags");
-                    Iterator<Map.Entry<String, JsonNode>> fields = tags.fields();
-                    while (fields.hasNext()) {
-                        Map.Entry<String, JsonNode> entry = fields.next();
-                        String name = entry.getKey();
-                        JSONUtilities.append(tagsNode, name);
-                    }
-                    //Convert to for loop to get all tags from all elements
-
-                    HttpUtilities.respond(response, result.toString());
-                } catch (IOException e) {
-                    throw new ServletException(e);
-                }
-            } else {
-                HttpUtilities.respond(response, "error", "Missing Overpass query or Overpass API instance");
             }
 
-            Writer w = response.getWriter();
-            JsonGenerator writer = ParsingUtilities.mapper.getFactory().createGenerator(w);
-            try {
-                writer.writeStartObject();
-                job.project.update(); // update all internal models, indexes, caches, etc.
-                writer.writeStringField("status", "ok");
-                writer.writeStringField("tags", tagsNode.toString());
-
-                writer.writeEndObject();
-            } catch (IOException e) {
-                HttpUtilities.respond(response, "error", ExceptionUtils.getStackTrace(e));
-                throw new ServletException(e);
-            } finally {
-                writer.flush();
-                writer.close();
-                w.flush();
-                w.close();
-            }
-
+            JSONUtilities.append(coordinatesNode, "lat");
+            JSONUtilities.append(coordinatesNode, "lon");
+            //Convert to for loop to get all tags from all elements
+            HttpUtilities.respondJSON(response, result);
         } catch (IOException e) {
-            throw new ServletException(e);
+            logger.error(ExceptionUtils.getStackTrace(e));
+            HttpUtilities.respondException(response, e);
         } finally {
             job.touch();
             job.updating = false;
@@ -172,9 +156,8 @@ public class OSMDataImportingController implements ImportingController {
         job.updating = true;
         final ObjectNode optionObj = ParsingUtilities.evaluateJsonStringToObjectNode(
                 request.getParameter("options"));
-        final ArrayNode mappings = ParsingUtilities.evaluateJsonStringToArrayNode(request.getParameter("mappings"));
-
-        final List<Exception> exceptions = new LinkedList<Exception>();
+        final ArrayNode tags = ParsingUtilities.evaluateJsonStringToArrayNode(request.getParameter("tags"));
+        final ArrayNode coordinates = ParsingUtilities.evaluateJsonStringToArrayNode(request.getParameter("coordinates"));
 
         job.setState("creating-project");
 
@@ -183,78 +166,87 @@ public class OSMDataImportingController implements ImportingController {
             ProjectMetadata pm = new ProjectMetadata();
             pm.setName(JSONUtilities.getString(optionObj, "projectName", "Untitled"));
             pm.setEncoding(JSONUtilities.getString(optionObj, "encoding", "UTF-8"));
+            String latitudeColumnName = "";
+            String longitudeColumnName = "";
 
-            try {
-                HttpClient httpClient = new HttpClient();
-                String _response = httpClient.postNameValue(overpassInstance, "data", overpassQuery);
+            Map<String, String> tagMappings = new HashMap<>();
 
-                ObjectNode object = ParsingUtilities.mapper.readValue(_response, ObjectNode.class);
-                ArrayNode elements = JSONUtilities.getArray(object, "elements");
-                if (mappings != null && mappings.size() > 0) {
-                    for (int i = 0; i < mappings.size(); i++) {
-                        if (mappings.get(i) instanceof ObjectNode) {
-                            ObjectNode obj = (ObjectNode) mappings.get(i);
-                            String newColumnName = obj.get("newColumnName").asText();
-
-                            if (newColumnName != null && !newColumnName.trim().isEmpty()) {
-                                try {
-                                    if (elements != null && elements.size() > 0) {
-                                        Column column = new Column(project.columnModel.allocateNewCellIndex(), newColumnName);
-                                        project.columnModel.addColumn(
-                                                project.columnModel.columns.size(),
-                                                column,
-                                                false
-                                        );
-                                        project.update();
-
-                                        for (int j = 0; j < elements.size(); j++) {
-                                            if (mappings.get(i) instanceof ObjectNode) {
-                                                ObjectNode node = (ObjectNode) elements.get(j);
-                                                ObjectNode tags = node.get("tags").deepCopy();
-                                                String osmTag = obj.get("osmTag").asText();
-                                                String value = null;
-
-                                                if (tags.has(osmTag)) {
-                                                    value = tags.get(osmTag).asText();
-                                                }
-
-                                                Row row;
-                                                try {
-                                                    row = project.rows.get(j);
-                                                } catch (IndexOutOfBoundsException e) {
-                                                    Row _row = new Row(mappings.size());
-                                                    row = _row;
-                                                }
-
-                                                row.setCell(column.getCellIndex(), new Cell(value, null));
-                                                project.rows.add(row);
-                                            }
-                                        }
-                                    }
-                                } catch (ModelException e) {
-                                    logger.error("Couldn't add column.", e);
-                                }
-                            }
+            if (coordinates != null && coordinates.size() > 0) {
+                for (JsonNode node : coordinates) {
+                    if (node instanceof ObjectNode) {
+                        ObjectNode obj = (ObjectNode) node;
+                        String newColumnName = obj.get("newColumnName").asText();
+                        String coordinate = obj.get("coordinate").asText();
+                        if (coordinate.equals("lat")) {
+                            latitudeColumnName = newColumnName;
+                        } else {
+                            longitudeColumnName = newColumnName;
                         }
+
+                        createColumn(project, newColumnName);
                     }
                 }
-            } catch (IOException e) {
-                logger.error(ExceptionUtils.getStackTrace(e));
             }
 
-            setProgress(job, 100);
+            if (tags != null && tags.size() > 0) {
+                for (JsonNode node : tags) {
+                    if (node instanceof ObjectNode) {
+                        ObjectNode obj = (ObjectNode) node;
+                        String osmTag = obj.get("osmTag").asText();
+                        String newColumnName = obj.get("newColumnName").asText();
+                        tagMappings.put(newColumnName, osmTag);
+
+                        createColumn(project, newColumnName);
+                    }
+                }
+            }
+
+            if (elements != null && elements.size() > 0) {
+                for (int i = 0; i < elements.size(); i++) {
+                    if (elements.get(i) instanceof ObjectNode) {
+                        Row row = new Row(project.columnModel.getMaxCellIndex());
+                        ObjectNode obj = (ObjectNode) elements.get(i);
+                        ObjectNode nodeTags = obj.get("tags").deepCopy();
+
+                        double latitude = obj.get("lat").asDouble();
+                        double longitude = obj.get("lon").asDouble();
+
+                        for (Column column : project.columnModel.columns) {
+                            String columnName = column.getName();
+                            String originalTagName = tagMappings.getOrDefault(columnName, null);
+
+                            String value;
+
+                            if (originalTagName != null && nodeTags.has(originalTagName)) {
+                                value = nodeTags.get(originalTagName).asText();
+                            } else if (columnName.equals(latitudeColumnName)) {
+                                value = String.valueOf(latitude);
+                            } else if (columnName.equals(longitudeColumnName)) {
+                                value = String.valueOf(longitude);
+                            } else {
+                                value = null;
+                            }
+
+                            row.setCell(column.getCellIndex(), new Cell(value, null));
+                        }
+
+                        project.rows.add(row);
+                    }
+
+                    job.setProgress(i * 100 / elements.size(),
+                            "Parsed " + i + "/" + elements.size() + " OpenStreetMap elements.");
+                }
+            }
+
+            job.setProgress(100, "Finished parsing OSM elements.");
 
             if (!job.canceled) {
-                if (exceptions.size() > 0) {
-                    job.setError(exceptions);
-                } else {
-                    project.update(); // update all internal models, indexes, caches, etc.
+                project.update();
 
-                    ProjectManager.singleton.registerProject(project, pm);
+                ProjectManager.singleton.registerProject(project, pm);
 
-                    job.setState("created-project");
-                    job.setProjectID(project.id);
-                }
+                job.setState("created-project");
+                job.setProjectID(project.id);
 
                 job.touch();
                 job.updating = false;
@@ -264,7 +256,18 @@ public class OSMDataImportingController implements ImportingController {
         HttpUtilities.respond(response, "ok", "done");
     }
 
-    static private void setProgress(ImportingJob job, int percent) {
-        job.setProgress(percent, "Parsing OpenStreetMap data...");
+    private void createColumn(Project project, String newColumnName) {
+        if (newColumnName != null && !newColumnName.trim().isEmpty()) {
+            try {
+                Column column = new Column(project.columnModel.allocateNewCellIndex(), newColumnName);
+                project.columnModel.addColumn(
+                        project.columnModel.columns.size(),
+                        column,
+                        false
+                );
+            } catch (ModelException e) {
+                logger.error("Couldn't add column.", e);
+            }
+        }
     }
 }
