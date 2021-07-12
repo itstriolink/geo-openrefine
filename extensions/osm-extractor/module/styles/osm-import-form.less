@@ -34,12 +34,35 @@
     vertical-align: bottom;
   }
 }
-.mapping-table-container {
-  height: 60em;
-  .text-center {
-    text-align: center;
+
+.main-container {
+  width: 400px;
+  table {
+    width: 100%;
+  }
+  .mapping-table-container {
+    position: static;
+    max-height: 500px;
+    .text-center {
+      text-align: center;
+    }
+  }
+
+  .statistics-container {
+    margin-top: 20px;
+    padding: 15px;
+    background-color: @fill_secondary;
+
+    h2{
+      margin-bottom: 10px;
+    }
+
+    span {
+      font-size: 1.125em;
+    }
   }
 }
+
 
 .column-list-container{
   height: 100%;

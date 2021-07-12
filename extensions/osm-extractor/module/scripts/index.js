@@ -120,12 +120,13 @@ Refine.OSMImportingController.prototype._showParsingPanel = function () {
     this._parsingPanelElmts = DOM.bind(this._parsingPanel);
 
 
-    this._parsingPanelElmts.startOverButton.html($.i18n('gdata-parsing/start-over'));
+    this._parsingPanelElmts.startOverButton.html($.i18n('osm-extractor/start-over'));
     this._parsingPanelElmts.configureMapping.html($.i18n('osm-extractor/configure-mapping'));
-    this._parsingPanelElmts.gdata_proj_name.html($.i18n('gdata-parsing/proj-name'));
+    this._parsingPanelElmts.projectName.html($.i18n('osm-extractor/project-name'));
     this._parsingPanelElmts.createProjectButton.html($.i18n('osm-extractor/create-project'));
+    this._parsingPanelElmts.statisticsHeading.html($.i18n('osm-extractor/statistics-label'));
 
-    this._parsingPanelElmts.retrievingTags.html($.i18n('osm-extractor/retrieving-tags'));
+    this._parsingPanelElmts.loadingMessage.html($.i18n('osm-extractor/loading-message'));
 
     if (this._parsingPanelResizer) {
         $(window).unbind('resize', this._parsingPanelResizer);
@@ -170,7 +171,7 @@ Refine.OSMImportingController.prototype._showParsingPanel = function () {
 Refine.OSMImportingController.prototype._updatePreview = function () {
     var self = this;
 
-    self._parsingPanelElmts.dataPanel.hide();
+    self._parsingPanelElmts.mainContainer.hide();
     self._parsingPanelElmts.progressPanel.show();
     self._parsingPanelElmts.createProjectButton.addClass("button-disabled").prop("disabled", true);
 
@@ -190,29 +191,29 @@ Refine.OSMImportingController.prototype._updatePreview = function () {
                 if (result.status == "ok") {
                     $(".osm-extractor-dialog-row").remove();
                     self._parsingPanelElmts.progressPanel.hide();
-                    self._parsingPanelElmts.dataPanel.show();
+                    self._parsingPanelElmts.mainContainer.show();
 
                     var tags = result.tags;
-                    var coordinates = result.coordinates;
-
-                    if(coordinates && coordinates.length > 0) {
-                        var coordinatesHeaderRow = $('<tr>').appendTo(self._parsingPanelElmts.columnList);
-                        var coordinatesHeaderCell = $('<td>')
+                    var geometry = result.geometry;
+                    var stats = result.stats;
+                    if (geometry && geometry.length > 0) {
+                        var geometryHeaderRow = $('<tr>').appendTo(self._parsingPanelElmts.columnList);
+                        var geometryHeaderCell = $('<td>')
                             .addClass("column-header")
                             .addClass("text-center")
                             .attr("colspan", 3)
-                            .html("Coordinates")
-                            .appendTo(coordinatesHeaderRow);
+                            .html("Geometry")
+                            .appendTo(geometryHeaderRow);
 
-                        var coordinatesHeaderCells = $('<tr>').appendTo(self._parsingPanelElmts.columnList);
-                        var indexHeaderCell = $('<td>').addClass("column-header").html(" ").appendTo(coordinatesHeaderCells);
-                        var coordinateHeaderCell = $('<td>').addClass("column-header").html("Coordinate").appendTo(coordinatesHeaderCells);
-                        var newColumnHeaderCell = $('<td>').addClass("column-header").html("Column name").appendTo(coordinatesHeaderCells);
-                        for(var i = 0; i < coordinates.length; i++) {
-                            var coordinate = coordinates[i];
+                        var geometryHeaderCells = $('<tr>').appendTo(self._parsingPanelElmts.columnList);
+                        $('<td>').addClass("column-header").html(" ").appendTo(geometryHeaderCells);
+                        $('<td>').addClass("column-header").html("Coordinate").appendTo(geometryHeaderCells);
+                        $('<td>').addClass("column-header").html("Column name").appendTo(geometryHeaderCells);
+                        for (var i = 0; i < geometry.length; i++) {
+                            var coordinate = geometry[i];
                             var row = $('<tr>')
                                 .addClass("osm-extractor-dialog-row")
-                                .addClass("coordinateRow")
+                                .addClass("geometryRow")
                                 .addClass(i % 2 == 0 ? "odd" : "even")
                                 .attr("rowIndex", i)
                                 .appendTo(self._parsingPanelElmts.columnList);
@@ -220,8 +221,8 @@ Refine.OSMImportingController.prototype._updatePreview = function () {
                             var indexCell = $('<td>')
                                 .appendTo(row);
 
-                            var coordinateNameCell = $('<td>').appendTo(row);
-                            var coordinateNameDiv = $('<div>').addClass("data-table-cell-content").appendTo(coordinateNameCell);
+                            var geometryNameCell = $('<td>').appendTo(row);
+                            var geometryNameDiv = $('<div>').addClass("data-table-cell-content").appendTo(geometryNameCell);
 
                             $('<div>')
                                 .text((i + 1) + ".")
@@ -234,12 +235,12 @@ Refine.OSMImportingController.prototype._updatePreview = function () {
                                 .attr("class", "includeTagCheckbox")
                                 .prop('checked', true)
                                 .attr("rowIndex", i)
-                                .appendTo(coordinateNameDiv);
+                                .appendTo(geometryNameDiv);
                             $('<span>')
                                 .text(coordinate)
                                 .attr("class", "osmTagName")
                                 .attr("rowIndex", i)
-                                .appendTo(coordinateNameDiv);
+                                .appendTo(geometryNameDiv);
 
                             var newColumnNameCell = $('<td>').appendTo(row);
                             var newColumnNameDiv = $('<div>').addClass("data-table-cell-content").appendTo(newColumnNameCell);
@@ -247,7 +248,6 @@ Refine.OSMImportingController.prototype._updatePreview = function () {
                             $('<input>')
                                 .attr('type', 'text')
                                 .attr("class", "newColumnName")
-                                .attr("id", "newColumnInput-" + i)
                                 .attr("rowIndex", i)
                                 .val(coordinate)
                                 .appendTo(newColumnNameDiv);
@@ -290,10 +290,11 @@ Refine.OSMImportingController.prototype._updatePreview = function () {
                             $('<input>')
                                 .attr('type', 'checkbox')
                                 .attr("id", "checkbox-" + i)
+                                .prop("checked", i == 0 ? true : false)
                                 .attr("class", "includeTagCheckbox")
-                                .prop('checked', true)
                                 .attr("rowIndex", i)
                                 .appendTo(tagNameDiv);
+
                             $('<span>')
                                 .text(column)
                                 .attr("class", "osmTagName")
@@ -306,13 +307,30 @@ Refine.OSMImportingController.prototype._updatePreview = function () {
                             $('<input>')
                                 .attr('type', 'text')
                                 .attr("class", "newColumnName")
-                                .attr("id", "newColumnInput-" + i)
+                                .attr("disabled", i > 0 ? true : false)
                                 .attr("rowIndex", i)
                                 .val(column)
                                 .appendTo(newColumnNameDiv);
                         }
                     }
 
+                    if (stats) {
+                        var objectLength = Object.keys(stats).length;
+                        for(var [key, value] of Object.entries(stats)) {
+                            var cell = $('<td>')
+                                .attr("width", (100 / objectLength) + "%")
+                                .appendTo(self._parsingPanelElmts.statisticsRow);
+
+                            $('<span>')
+                                .text(key + ": ")
+                                .attr(key, value)
+                                .appendTo(cell);
+
+                            $('<strong>')
+                                .text(value)
+                                .appendTo(cell);
+                        }
+                    }
                     $(".includeTagCheckbox").click(function () {
                         if (this.checked) {
                             $(this).parent().parent().siblings().find("input.newColumnName").attr("disabled", false);
@@ -347,7 +365,7 @@ Refine.OSMImportingController.prototype._createProject = function () {
         "encoding": "UTF-8"
     }
     var tags = [];
-    var coordinates = [];
+    var geometry = [];
 
     $('#raw-query-response-table tbody tr.tagRow').each(function () {
         var row = $(this);
@@ -362,20 +380,20 @@ Refine.OSMImportingController.prototype._createProject = function () {
             });
         }
     });
-    $('#raw-query-response-table tbody tr.coordinateRow').each(function () {
+    $('#raw-query-response-table tbody tr.geometryRow').each(function () {
         var row = $(this);
         var checkbox = row.find('input.includeTagCheckbox')[0];
         var coordinate = row.find('span.osmTagName').html();
         var newColumnName = row.find('input.newColumnName').val();
 
         if (checkbox && checkbox.checked) {
-            coordinates.push({
+            geometry.push({
                 coordinate,
                 newColumnName,
             });
         }
     });
-    Refine.wrapCSRF(function(token) {
+    Refine.wrapCSRF(function (token) {
         $.post(
             "command/core/importing-controller?" + $.param({
                 "controller": "osm-extractor/osm-data-importing-controller",
@@ -386,35 +404,35 @@ Refine.OSMImportingController.prototype._createProject = function () {
             {
                 "options": JSON.stringify(options),
                 "tags": JSON.stringify(tags),
-                "coordinates": JSON.stringify(coordinates)
+                "geometry": JSON.stringify(geometry)
             },
-            function(o) {
+            function (o) {
                 if (o.status == 'error') {
                     alert(o.message);
                 } else {
                     var start = new Date();
                     var timerID = window.setInterval(
-                        function() {
+                        function () {
                             self._createProjectUI.pollImportJob(
                                 start,
                                 self._jobID,
                                 timerID,
-                                function(job) {
+                                function (job) {
                                     return "projectID" in job.config;
                                 },
-                                function(jobID, job) {
+                                function (jobID, job) {
                                     window.clearInterval(timerID);
                                     Refine.CreateProjectUI.cancelImportingJob(jobID);
                                     document.location = "project?project=" + job.config.projectID;
                                 },
-                                function(job) {
+                                function (job) {
                                     alert(Refine.CreateProjectUI.composeErrorMessage(job));
                                 }
                             );
                         },
                         1000
                     );
-                    self._createProjectUI.showImportProgressPanel($.i18n('gdata-import/creating'), function() {
+                    self._createProjectUI.showImportProgressPanel($.i18n('gdata-import/creating'), function () {
                         // stop the timed polling
                         window.clearInterval(timerID);
 

@@ -23,16 +23,11 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 
 public class OSMDataImportingController implements ImportingController {
     private static final Logger logger = LoggerFactory.getLogger("OSMDataImportingController");
     protected RefineServlet servlet;
-    protected String overpassInstance;
-    protected String overpassQuery;
     protected ArrayNode elements;
 
     @Override
@@ -45,7 +40,6 @@ public class OSMDataImportingController implements ImportingController {
             throws IOException {
         HttpUtilities.respond(response, "error", "GET not implemented");
     }
-
 
     @Override
     public void doPost(HttpServletRequest request, HttpServletResponse response)
@@ -99,39 +93,75 @@ public class OSMDataImportingController implements ImportingController {
         try {
             job.prepareNewProject();
             job.setProgress(-1, "Parsing OpenStreetMap data...");
-
             ArrayNode tagsNode = ParsingUtilities.mapper.createArrayNode();
-            ArrayNode coordinatesNode = ParsingUtilities.mapper.createArrayNode();
+            ArrayNode geometryNode = ParsingUtilities.mapper.createArrayNode();
+            ObjectNode statsNode = ParsingUtilities.mapper.createObjectNode();
+            int nodes = 0;
+            int ways = 0;
+            int relations = 0;
 
             HttpClient httpClient = new HttpClient();
             String overpassResponse = httpClient.postNameValue(overpassInstance, "data", overpassQuery);
-            this.overpassInstance = overpassInstance;
-            this.overpassQuery = overpassQuery;
 
             ObjectNode object = ParsingUtilities.mapper.readValue(overpassResponse, ObjectNode.class);
             ArrayNode elements = JSONUtilities.getArray(object, "elements");
+            List<String> tags = new ArrayList<>();
+            if(elements != null && elements.size() > 0) {
+                for(JsonNode node : elements) {
+                    if(node instanceof ObjectNode) {
+                        ObjectNode obj = (ObjectNode) node;
+                        String type = obj.get("type").asText();
+
+                        if(type != null) {
+                            switch(type) {
+                                case "node":
+                                    nodes++;
+                                    break;
+                                case "way":
+                                    ways++;
+                                    break;
+                                case "relation":
+                                    relations++;
+                                    break;
+                                default:
+                                    break;
+                            }
+                        }
+
+                        ObjectNode elementTags = JSONUtilities.getObject(obj, "tags");
+
+                        if (elementTags != null) {
+                            Iterator<Map.Entry<String, JsonNode>> fields = elementTags.fields();
+                            while (fields.hasNext()) {
+                                Map.Entry<String, JsonNode> entry = fields.next();
+                                String name = entry.getKey();
+                                if(!tags.contains(name)) {
+                                    tags.add(name);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                for(String tagName : tags) {
+                    JSONUtilities.append(tagsNode, tagName);
+                }
+            }
+
+            statsNode.put("nodes", nodes);
+            statsNode.put("ways", ways);
+            statsNode.put("relations", relations);
 
             this.elements = elements;
-            ObjectNode firstElement = JSONUtilities.getObjectElement(elements, 0);
             ObjectNode result = ParsingUtilities.mapper.createObjectNode();
 
             JSONUtilities.safePut(result, "status", "ok");
             JSONUtilities.safePut(result, "tags", tagsNode);
-            JSONUtilities.safePut(result, "coordinates", coordinatesNode);
+            JSONUtilities.safePut(result, "geometry", geometryNode);
+            JSONUtilities.safePut(result, "stats", statsNode);
 
-            ObjectNode tags = JSONUtilities.getObject(firstElement, "tags");
-
-            if (tags != null) {
-                Iterator<Map.Entry<String, JsonNode>> fields = tags.fields();
-                while (fields.hasNext()) {
-                    Map.Entry<String, JsonNode> entry = fields.next();
-                    String name = entry.getKey();
-                    JSONUtilities.append(tagsNode, name);
-                }
-            }
-
-            JSONUtilities.append(coordinatesNode, "lat");
-            JSONUtilities.append(coordinatesNode, "lon");
+            JSONUtilities.append(geometryNode, "lat");
+            JSONUtilities.append(geometryNode, "lon");
             //Convert to for loop to get all tags from all elements
             HttpUtilities.respondJSON(response, result);
         } catch (IOException e) {
@@ -157,7 +187,7 @@ public class OSMDataImportingController implements ImportingController {
         final ObjectNode optionObj = ParsingUtilities.evaluateJsonStringToObjectNode(
                 request.getParameter("options"));
         final ArrayNode tags = ParsingUtilities.evaluateJsonStringToArrayNode(request.getParameter("tags"));
-        final ArrayNode coordinates = ParsingUtilities.evaluateJsonStringToArrayNode(request.getParameter("coordinates"));
+        final ArrayNode geometry = ParsingUtilities.evaluateJsonStringToArrayNode(request.getParameter("geometry"));
 
         job.setState("creating-project");
 
@@ -171,8 +201,8 @@ public class OSMDataImportingController implements ImportingController {
 
             Map<String, String> tagMappings = new HashMap<>();
 
-            if (coordinates != null && coordinates.size() > 0) {
-                for (JsonNode node : coordinates) {
+            if (geometry != null && geometry.size() > 0) {
+                for (JsonNode node : geometry) {
                     if (node instanceof ObjectNode) {
                         ObjectNode obj = (ObjectNode) node;
                         String newColumnName = obj.get("newColumnName").asText();
@@ -256,7 +286,7 @@ public class OSMDataImportingController implements ImportingController {
         HttpUtilities.respond(response, "ok", "done");
     }
 
-    private void createColumn(Project project, String newColumnName) {
+    private static void createColumn(Project project, String newColumnName) {
         if (newColumnName != null && !newColumnName.trim().isEmpty()) {
             try {
                 Column column = new Column(project.columnModel.allocateNewCellIndex(), newColumnName);
