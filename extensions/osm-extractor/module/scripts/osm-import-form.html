@@ -1,0 +1,50 @@
+<div>
+    <table>
+        <tr>
+            <th style="vertical-align: middle;" id="settings-select-overpass-instance">
+                <label for="selectInstance" bind="selectInstance"/>
+            </th>
+        </tr>
+        <tr>
+            <td colspan="2">
+                <hr class="osm-import-separator"/>
+            </td>
+        </tr>
+        <tr>
+            <th>
+                <span bind="enterRawQuery"/>
+            </th>
+<!--            <th>-->
+<!--                <span bind="rawQueryMappings"/>-->
+<!--            </th>-->
+        </tr>
+        <tr>
+            <td>
+                                <textarea class="raw-query-code"
+                                          bind="rawQueryInput"/>
+            </td>
+<!--            <td width="40%">-->
+<!--                <div class="column-list-container">-->
+<!--                    <table id="raw-query-response-table" bind="columnList" width="100%">-->
+<!--                        <thead class="header">-->
+<!--                        <tr>-->
+<!--                            <th width="100px">Tag Name</th>-->
+<!--                            <th width="100px">New Column Name</th>-->
+<!--                        </tr>-->
+<!--                        </thead>-->
+<!--                    </table>-->
+<!--                </div>-->
+<!--            </td>-->
+        </tr>
+        <tr>
+            <td>
+                <button type="button" bind="nextButton"
+                        class="button-secondary pure-button"/>
+            </td>
+<!--            <td>-->
+<!--                <button type="button" id="saveRawQuery" bind="saveRawQueryButton"-->
+<!--                        class="button-secondary pure-button"/>-->
+<!--            </td>-->
+        </tr>
+    </table>
+</div>

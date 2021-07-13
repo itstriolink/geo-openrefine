@@ -4,7 +4,11 @@
     width: 100%;
     border: 1px solid @chrome_primary;
     height: 25em;
+    padding: @padding_tighter;
     resize: vertical;
+    -moz-border-radius: 5px;
+    -webkit-border-radius: 5px;
+    border-radius: 5px;
 }
 
 #osm-extractor-tabs{
@@ -38,15 +42,18 @@
     }
 }
 
-.osm-extractor-columns {
-    overflow-y: auto;
-    border: 1px solid @chrome_primary;
-    padding: @padding_loose;
-    height: 22em;
-    border-radius: 4px;
-}
-
 .column-list-container{
     height: 25em;
+    border: 1px solid @chrome_primary;
+    padding: @padding_tighter;
     overflow-y: auto;
+    -moz-border-radius: 5px;
+    -webkit-border-radius: 5px;
+    border-radius: 5px;
+
+    .osm-extractor-columns {
+        border: 1px solid @chrome_primary;
+        padding: @padding_loose;
+        border-radius: 4px;
+    }
 }

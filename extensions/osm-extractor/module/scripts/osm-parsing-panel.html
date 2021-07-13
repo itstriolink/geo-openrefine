@@ -1,0 +1,37 @@
+<div bind="wizardHeader" class="default-importing-wizard-header">
+    <div class="grid-layout layout-tightest layout-full">
+        <table>
+            <tr>
+                <td width="1px">
+                    <button bind="startOverButton" class="button"></button>
+                </td>
+                <td width="1px"></td>
+                <td width="auto" bind="configureMapping"></td>
+                <td style="text-align: right;" bind="projectName"></td>
+                <td width="1%"><input class="inline" type="text" size="30" bind="projectNameInput"/></td>
+                <td width="1%">
+                    <button bind="createProjectButton" class="button button-primary"></button>
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>
+<div class="main-container" bind="mainContainer">
+    <div class="default-importing-parsing-data-panel mapping-table-container" bind="dataPanel">
+        <table class="data-table" id="raw-query-response-table" bind="columnList"/>
+    </div>
+    <div class="statistics-container">
+        <table>
+            <tr>
+                <td width="1px">
+                    <h2 bind="statisticsHeading"/>
+                </td>
+            </tr>
+            <tr bind="statisticsRow" />
+        </table>
+    </div>
+</div>
+
+<div bind="progressPanel" class="gdata-importing-progress-data-panel">
+    <img src="images/large-spinner.gif"/> <span bind="loadingMessage"></span>
+</div>

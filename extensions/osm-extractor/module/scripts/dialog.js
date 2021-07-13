@@ -54,6 +54,7 @@ OSMExtractorDialog.prototype._createDialog = function () {
     self._elmts.dialogRawQuery.html($.i18n('osm-extractor/raw-query-tab'));
     self._elmts.dialogSettings.html($.i18n('osm-extractor/settings-tab'));
     self._elmts.enterRawQuery.html($.i18n('osm-extractor/enter-raw-query'));
+    self._elmts.rawQueryMappings.html($.i18n('osm-extractor/raw-query-mappings'));
 
     self._elmts.runRawQueryButton.html($.i18n('osm-extractor/run-query'));
     self._elmts.saveRawQueryButton.html($.i18n('osm-extractor/save-query'));
@@ -76,6 +77,7 @@ OSMExtractorDialog.prototype._createDialog = function () {
     this._elmts.runRawQueryButton.click(function (_) {
         var data = self._elmts.rawQueryInput[0] && self._elmts.rawQueryInput[0].value;
         var overpassAPI = $("#selectInstance").val();
+        self._elmts.runRawQueryButton.prop("disabled", true);
 
         if (data && overpassAPI) {
             $.post(
@@ -140,6 +142,8 @@ OSMExtractorDialog.prototype._createDialog = function () {
                 "json"
             )
         }
+
+        self._elmts.runRawQueryButton.prop("disabled", false);
     });
 
     this._elmts.saveRawQueryButton.click(function (_) {
