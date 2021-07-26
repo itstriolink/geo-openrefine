@@ -167,13 +167,16 @@ Refine.OSMImportingController.prototype._showParsingPanel = function () {
     $(window).resize(this._parsingPanelResizer);
     this._parsingPanelResizer();
 
+    $("#pointsDelimitedSeparatorInput").val(", ");
+
     this._parsingPanelElmts.pointsCheckbox.change(function () {
-        if(!this.checked) {
-            $("input[name='pointsCheckbox']").each(function () {
+        if (!this.checked) {
+            $("input[name='pointsCheckbox'], input#pointsDelimitedSeparatorInput").each(function () {
                 $(this).prop("disabled", true);
             });
+
         } else {
-            $("input[name='pointsCheckbox']").each(function () {
+            $("input[name='pointsCheckbox'], input#pointsDelimitedSeparatorInput").each(function () {
                 $(this).prop("disabled", false);
             });
         }
@@ -387,15 +390,16 @@ Refine.OSMImportingController.prototype._createProject = function () {
         return;
     }
 
-    var options = {
+    var projectOptions = {
         "projectName": projectName,
         "encoding": "UTF-8"
     }
     var tags = [];
     var geometry = [];
-    var elementsToInclude = {
+    var osmOptions = {
         "points": self._parsingPanelElmts.pointsCheckbox[0].checked,
         "pointsOption": $('input[name="pointsCheckbox"]:checked').val(),
+        "pointsSeparator": $('input#pointsDelimitedSeparatorInput').val(),
         "lines": self._parsingPanelElmts.linesCheckbox[0].checked,
         "polygons": self._parsingPanelElmts.polygonsCheckbox[0].checked,
         "multiPolygons": self._parsingPanelElmts.multiPolygonsCheckbox[0].checked
@@ -437,10 +441,10 @@ Refine.OSMImportingController.prototype._createProject = function () {
                 "csrf_token": token
             }),
             {
-                "options": JSON.stringify(options),
+                "projectOptions": JSON.stringify(projectOptions),
                 "tags": JSON.stringify(tags),
                 "geometry": JSON.stringify(geometry),
-                "elementsToInclude": JSON.stringify(elementsToInclude)
+                "osmOptions": JSON.stringify(osmOptions)
             },
             function (o) {
                 if (o.status == 'error') {

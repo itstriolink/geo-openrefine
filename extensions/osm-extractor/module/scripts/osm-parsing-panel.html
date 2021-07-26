@@ -6,9 +6,9 @@
                     <button bind="startOverButton" class="button"></button>
                 </td>
                 <td width="1px"></td>
-                <td width="auto" bind="configureMapping"></td>
-                <td style="text-align: right;" bind="projectName"></td>
-                <td width="1%"><input class="inline" type="text" size="30" bind="projectNameInput"/></td>
+                <td bind="configureMapping" width="auto"></td>
+                <td bind="projectName" style="text-align: right;"></td>
+                <td width="1%"><input bind="projectNameInput" class="inline" size="30" type="text"/></td>
                 <td width="1%">
                     <button bind="createProjectButton" class="button button-primary"></button>
                 </td>
@@ -16,12 +16,12 @@
         </table>
     </div>
 </div>
-<div class="main-container" bind="mainContainer">
-    <div class="default-importing-parsing-data-panel mapping-table-container" bind="dataPanel">
-        <table class="data-table" id="raw-query-response-table" bind="columnList"/>
+<div bind="mainContainer" class="main-container">
+    <div bind="dataPanel" class="default-importing-parsing-data-panel mapping-table-container">
+        <table bind="columnList" class="data-table" id="raw-query-response-table"/>
     </div>
 
-    <div class="default-importing-parsing-control-panel osm-parsing-options " bind="controlPanel">
+    <div bind="controlPanel" class="default-importing-parsing-control-panel osm-parsing-options ">
         <table>
             <tr>
                 <td>
@@ -37,10 +37,10 @@
                                 <tbody>
                                 <tr>
                                     <td width="1%">
-                                        <input type="checkbox" bind="pointsCheckbox" id="$points" checked/>
+                                        <input bind="pointsCheckbox" checked id="$points" type="checkbox"/>
                                     </td>
                                     <td width="99%">
-                                        <label for="$points" bind="pointsLabel"></label>
+                                        <label bind="pointsLabel" for="$points"></label>
                                     </td>
                                 </tr>
                                 <tr>
@@ -49,25 +49,36 @@
                                             <tbody>
                                             <tr>
                                                 <td colspan="2">
-                                                    <input type="radio" bind="pointsLatLonRadio" id="pointsLatLonRadio"
-                                                           name="pointsCheckbox" checked/>
+                                                    <input bind="pointsLatLonRadio"
+                                                           checked
+                                                           id="pointsLatLonRadio"
+                                                           name="pointsCheckbox"
+                                                           type="radio"
+                                                           value="latlon"
+                                                    />
                                                     <label for="pointsLatLonRadio"><span
                                                             bind="pointsLatLonLabel"/></label>
                                                 </td>
                                             </tr>
                                             <tr>
                                                 <td colspan="2">
-                                                    <input type="radio" bind="pointsDelimitedRadio"
-                                                           id="pointsDelimitedRadio"
-                                                           name="pointsCheckbox"/>
+                                                    <input bind="pointsDelimitedRadio" id="pointsDelimitedRadio"
+                                                           name="pointsCheckbox"
+                                                           type="radio"
+                                                           value="delimited"/>
                                                     <label for="pointsDelimitedRadio"><span
                                                             bind="pointsDelimitedLabel"/></label>
+                                                    <input bind="pointsDelimitedSeparatorInput" id="pointsDelimitedSeparatorInput" size="5"
+                                                           type="text"/>
                                                 </td>
                                             </tr>
                                             <tr>
                                                 <td colspan="2">
-                                                    <input type="radio" bind="pointsWKTRadio" id="pointsWKTRadio"
-                                                           name="pointsCheckbox"/>
+                                                    <input bind="pointsWKTRadio"
+                                                           id="pointsWKTRadio"
+                                                           name="pointsCheckbox"
+                                                           type="radio"
+                                                           value="wkt"/>
                                                     <label for="pointsWKTRadio"><span bind="pointsWKTLabel"/></label>
                                                 </td>
                                             </tr>
@@ -78,27 +89,27 @@
 
                                 <tr>
                                     <td width="1%">
-                                        <input type="checkbox" bind="linesCheckbox" id="$lines" checked/>
+                                        <input bind="linesCheckbox" checked id="$lines" type="checkbox"/>
                                     </td>
                                     <td width="99%">
-                                        <label for="$lines" bind="linesLabel"></label>
+                                        <label bind="linesLabel" for="$lines"></label>
                                     </td>
                                 </tr>
                                 <tr>
                                     <td width="1%">
-                                        <input type="checkbox" bind="polygonsCheckbox" id="$polygons" checked/>
+                                        <input bind="polygonsCheckbox" checked id="$polygons" type="checkbox"/>
                                     </td>
                                     <td width="99%">
-                                        <label for="$polygons" bind="polygonsLabel"></label>
+                                        <label bind="polygonsLabel" for="$polygons"></label>
                                     </td>
                                 </tr>
                                 <tr>
                                     <td width="1%">
-                                        <input type="checkbox" bind="multiPolygonsCheckbox" id="$multiPolygons"
-                                               checked/>
+                                        <input bind="multiPolygonsCheckbox" checked id="$multiPolygons"
+                                               type="checkbox"/>
                                     </td>
                                     <td width="99%">
-                                        <label for="$multiPolygons" bind="multiPolygonsLabel"></label>
+                                        <label bind="multiPolygonsLabel" for="$multiPolygons"></label>
                                     </td>
                                 </tr>
                                 </tbody>

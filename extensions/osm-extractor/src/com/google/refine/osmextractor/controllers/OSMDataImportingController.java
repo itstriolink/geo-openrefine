@@ -11,13 +11,13 @@ import com.google.refine.importing.ImportingController;
 import com.google.refine.importing.ImportingJob;
 import com.google.refine.importing.ImportingManager;
 import com.google.refine.model.*;
+import com.google.refine.osmextractor.extractor.OSMData;
 import com.google.refine.osmextractor.util.Util;
 import com.google.refine.util.JSONUtilities;
 import com.google.refine.util.ParsingUtilities;
 import de.topobyte.osm4j.core.access.OsmInputException;
 import de.topobyte.osm4j.core.access.OsmReader;
 import de.topobyte.osm4j.core.dataset.InMemoryMapDataSet;
-import de.topobyte.osm4j.core.dataset.MapDataSetLoader;
 import de.topobyte.osm4j.core.model.iface.OsmNode;
 import de.topobyte.osm4j.core.model.iface.OsmRelation;
 import de.topobyte.osm4j.core.model.iface.OsmTag;
@@ -27,14 +27,12 @@ import de.topobyte.osm4j.core.resolve.EntityFinder;
 import de.topobyte.osm4j.core.resolve.EntityFinders;
 import de.topobyte.osm4j.core.resolve.EntityNotFoundException;
 import de.topobyte.osm4j.core.resolve.EntityNotFoundStrategy;
-import de.topobyte.osm4j.geometry.*;
+import de.topobyte.osm4j.geometry.NodeBuilder;
 import de.topobyte.osm4j.xml.dynsax.OsmXmlReader;
 import org.apache.commons.lang.exception.ExceptionUtils;
-import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.LineString;
 import org.locationtech.jts.geom.MultiPolygon;
 import org.locationtech.jts.geom.Point;
-import org.locationtech.jts.io.WKTWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,10 +53,6 @@ public class OSMDataImportingController implements ImportingController {
     protected String overpassQuery;
     private OSMData osmData;
 
-    private GeometryBuilder geometryBuilder;
-    private WayBuilder wayBuilder;
-    private RegionBuilder regionBuilder;
-
     private static void createColumn(Project project, String newColumnName) {
         if (newColumnName != null && !newColumnName.trim().isEmpty()) {
             try {
@@ -77,10 +71,6 @@ public class OSMDataImportingController implements ImportingController {
     @Override
     public void init(RefineServlet servlet) {
         this.servlet = servlet;
-
-        this.geometryBuilder = new GeometryBuilder();
-        this.wayBuilder = new WayBuilder();
-        this.regionBuilder = new RegionBuilder();
     }
 
     @Override
@@ -157,6 +147,8 @@ public class OSMDataImportingController implements ImportingController {
             InputStream input = new URL(query).openStream();
             OsmReader reader = new OsmXmlReader(input, false);
             InMemoryMapDataSet data = osmData.loadData(reader);
+            input.close();
+
             EntityFinder wayFinder = EntityFinders.create(data,
                     EntityNotFoundStrategy.IGNORE);
 
@@ -167,9 +159,11 @@ public class OSMDataImportingController implements ImportingController {
 
             for (OsmRelation relation : data.getRelations().valueCollection()) {
                 MultiPolygon area = osmData.getPolygon(relation);
-                if (area != null) {
+
+                if (area != null && !area.isEmpty()) {
                     osmData.addPolygon(area, OsmModelUtil.getTagsAsMap(relation));
                 }
+
                 try {
                     wayFinder.findMemberWays(relation, relationWays);
                 } catch (EntityNotFoundException e) {
@@ -195,17 +189,14 @@ public class OSMDataImportingController implements ImportingController {
                 }
 
                 MultiPolygon area = osmData.getPolygon(way);
-                if (area != null) {
+                if (area != null && !area.isEmpty()) {
                     osmData.addPolygon(area, OsmModelUtil.getTagsAsMap(way));
+                    continue;
                 }
 
                 Collection<LineString> paths = osmData.getLine(way);
                 for (LineString path : paths) {
-                    if (path.isClosed()) {
-                        //osmData.polygons.add(path);
-                    } else {
-                        osmData.addLineString(path, OsmModelUtil.getTagsAsMap(way));
-                    }
+                    osmData.addLineString(path, OsmModelUtil.getTagsAsMap(way));
                 }
 
                 if (way.getNumberOfTags() > 0) {
@@ -236,57 +227,6 @@ public class OSMDataImportingController implements ImportingController {
                 }
             }
 
-//            for (EntityContainer container : iterator) {
-//                switch (container.getType()) {
-//                    case Node:
-//                        OsmNode node = (OsmNode) container.getEntity();
-//                        //osmData.addPoint(geometryBuilder.build(node));
-//                        if (node.getNumberOfTags() > 0) {
-//                            for (int i = 0; i < node.getNumberOfTags(); i++) {
-//                                OsmTag tag = node.getTag(i);
-//                                if (!tagsMap.containsKey(tag.getKey())) {
-//                                    tagsMap.put(tag.getKey(), 1);
-//                                } else {
-//                                    tagsMap.put(tag.getKey(), tagsMap.get(tag.getKey()) + 1);
-//                                }
-//                            }
-//                        }
-//                        break;
-//                    case Way:
-//                        OsmWay way = (OsmWay) container.getEntity();
-//                        //Collection<LineString> paths = osmData.getLine(way);
-////                        for (LineString path : paths) {
-////                            osmData.addLineString(path);
-////                        }
-//
-//                        if (way.getNumberOfTags() > 0) {
-//                            for (int i = 0; i < way.getNumberOfTags(); i++) {
-//                                OsmTag tag = way.getTag(i);
-//                                if (!tagsMap.containsKey(tag.getKey())) {
-//                                    tagsMap.put(tag.getKey(), 1);
-//                                } else {
-//                                    tagsMap.put(tag.getKey(), tagsMap.get(tag.getKey()) + 1);
-//                                }
-//                            }
-//                        }
-//                        break;
-//                    case Relation:
-//                        OsmRelation relation = (OsmRelation) container.getEntity();
-//                        //RegionBuilderResult relationResult = regionBuilder.build(relation, data);
-//                        for (int i = 0; i < relation.getNumberOfTags(); i++) {
-//                            OsmTag tag = relation.getTag(i);
-//                            if (!tagsMap.containsKey(tag.getKey())) {
-//                                tagsMap.put(tag.getKey(), 1);
-//                            } else {
-//                                tagsMap.put(tag.getKey(), tagsMap.get(tag.getKey()) + 1);
-//                            }
-//                        }
-//                        break;
-//                    default:
-//                        break;
-//                }
-//            }
-
             List<String> tags = tagsMap.entrySet().stream()
                     .sorted(Comparator.comparing(Map.Entry::getValue, Comparator.reverseOrder()))
                     .map(Map.Entry::getKey)
@@ -309,6 +249,7 @@ public class OSMDataImportingController implements ImportingController {
 
             JSONUtilities.append(geometryNode, "lat");
             JSONUtilities.append(geometryNode, "lon");
+            JSONUtilities.append(geometryNode, "WKT");
             HttpUtilities.respondJSON(response, result);
         } catch (IOException | OsmInputException | EntityNotFoundException e) {
             logger.error(ExceptionUtils.getStackTrace(e));
@@ -320,7 +261,7 @@ public class OSMDataImportingController implements ImportingController {
     }
 
     private void doCreateProject(HttpServletRequest request, HttpServletResponse response, Properties parameters)
-            throws ServletException, IOException {
+            throws IOException {
 
         long jobID = Long.parseLong(parameters.getProperty("jobID"));
         final ImportingJob job = ImportingManager.getJob(jobID);
@@ -330,27 +271,29 @@ public class OSMDataImportingController implements ImportingController {
         }
 
         job.updating = true;
-        final ObjectNode optionObj = ParsingUtilities.evaluateJsonStringToObjectNode(
-                request.getParameter("options"));
+        final ObjectNode projectOptions = ParsingUtilities.evaluateJsonStringToObjectNode(
+                request.getParameter("projectOptions"));
         final ArrayNode tags = ParsingUtilities.evaluateJsonStringToArrayNode(request.getParameter("tags"));
         final ArrayNode geometry = ParsingUtilities.evaluateJsonStringToArrayNode(request.getParameter("geometry"));
-        final ObjectNode elementsToInclude = ParsingUtilities.evaluateJsonStringToObjectNode(request.getParameter("elementsToInclude"));
+        final ObjectNode osmOptions = ParsingUtilities.evaluateJsonStringToObjectNode(request.getParameter("osmOptions"));
 
-        boolean includePoints = elementsToInclude.get("points").asBoolean(false);
-        String pointsOption = elementsToInclude.get("pointsOption").asText(null);
-        boolean includeLineStrings = elementsToInclude.get("lines").asBoolean(false);
-        boolean includePolygons = elementsToInclude.get("polygons").asBoolean(false);
-        boolean includeMultiPolygons = elementsToInclude.get("multiPolygons").asBoolean(false);
+        boolean includePoints = osmOptions.get("points").asBoolean(false);
+        String pointsOption = osmOptions.get("pointsOption").asText(null);
+        String pointsSeparator = osmOptions.get("pointsSeparator").asText(", ");
+        boolean includeLineStrings = osmOptions.get("lines").asBoolean(false);
+        boolean includePolygons = osmOptions.get("polygons").asBoolean(false);
+        boolean includeMultiPolygons = osmOptions.get("multiPolygons").asBoolean(false);
 
         job.setState("creating-project");
 
         final Project project = new Project();
         new Thread(() -> {
             ProjectMetadata pm = new ProjectMetadata();
-            pm.setName(JSONUtilities.getString(optionObj, "projectName", "Untitled"));
-            pm.setEncoding(JSONUtilities.getString(optionObj, "encoding", "UTF-8"));
+            pm.setName(JSONUtilities.getString(projectOptions, "projectName", "Untitled"));
+            pm.setEncoding(JSONUtilities.getString(projectOptions, "encoding", "UTF-8"));
             String latitudeColumnName = "";
             String longitudeColumnName = "";
+            String WKTColumnName = "";
 
             Map<String, String> tagMappings = new HashMap<>();
 
@@ -362,8 +305,10 @@ public class OSMDataImportingController implements ImportingController {
                         String coordinate = obj.get("coordinate").asText();
                         if (coordinate.equals("lat")) {
                             latitudeColumnName = newColumnName;
-                        } else {
+                        } else if (coordinate.equals("lon")) {
                             longitudeColumnName = newColumnName;
+                        } else if (coordinate.equals("WKT")) {
+                            WKTColumnName = newColumnName;
                         }
 
                         createColumn(project, newColumnName);
@@ -383,23 +328,20 @@ public class OSMDataImportingController implements ImportingController {
                 }
             }
 
-            createColumn(project, "wktRepresentation");
-
-
             Map<Point, Map<String, String>> points = osmData.getPoints();
             Map<LineString, Map<String, String>> lineStrings = osmData.getLineStrings();
-            Map<MultiPolygon, Map<String, String>> polygons = osmData.getPolygons();
+            Map<MultiPolygon, Map<String, String>> polygons = osmData.getMultiPolygons();
 
             int includeItemsCount = 0;
-            if(includePoints) {
+            if (includePoints) {
                 includeItemsCount++;
             }
 
-            if(includeLineStrings) {
+            if (includeLineStrings) {
                 includeItemsCount++;
             }
 
-            if(includePolygons) {
+            if (includePolygons) {
                 includeItemsCount++;
             }
 
@@ -419,14 +361,14 @@ public class OSMDataImportingController implements ImportingController {
 
                         String value;
 
-                        if (originalTagName != null && currentTags.get(originalTagName) != null) {
-                            value = currentTags.get(originalTagName);
-                        } else if (columnName.equals(latitudeColumnName)) {
+                        if (columnName.equals(latitudeColumnName)) {
                             value = String.valueOf(latitude);
                         } else if (columnName.equals(longitudeColumnName)) {
                             value = String.valueOf(longitude);
-                        } else if (column.getName() == "wktRepresentation") {
+                        } else if (columnName.equals(WKTColumnName)) {
                             value = osmData.getWKTRepresentation(point);
+                        } else if (originalTagName != null && currentTags.get(originalTagName) != null) {
+                            value = currentTags.get(originalTagName);
                         } else {
                             value = null;
                         }
@@ -441,7 +383,6 @@ public class OSMDataImportingController implements ImportingController {
                 }
             }
 
-            //TBD
             if (lineStrings != null && lineStrings.size() > 0 && includeLineStrings) {
                 int index = 0;
                 for (Map.Entry<LineString, Map<String, String>> entry : lineStrings.entrySet()) {
@@ -455,7 +396,9 @@ public class OSMDataImportingController implements ImportingController {
 
                         String value;
 
-                        if (originalTagName != null && currentTags.get(originalTagName) != null) {
+                        if (columnName.equals(WKTColumnName)) {
+                            value = osmData.getWKTRepresentation(lineString);
+                        } else if (originalTagName != null && currentTags.get(originalTagName) != null) {
                             value = currentTags.get(originalTagName);
                         } else {
                             value = null;
@@ -485,10 +428,10 @@ public class OSMDataImportingController implements ImportingController {
 
                         String value;
 
-                        if (originalTagName != null && currentTags.get(originalTagName) != null) {
-                            value = currentTags.get(originalTagName);
-                        } else if (column.getName() == "wktRepresentation") {
+                        if (columnName.equals(WKTColumnName)) {
                             value = osmData.getWKTRepresentation(polygon);
+                        } else if (originalTagName != null && currentTags.get(originalTagName) != null) {
+                            value = currentTags.get(originalTagName);
                         } else {
                             value = null;
                         }
@@ -520,110 +463,6 @@ public class OSMDataImportingController implements ImportingController {
         }).start();
 
         HttpUtilities.respond(response, "ok", "done");
-    }
-
-    private class OSMData {
-        private Map<Point, Map<String, String>> points;
-        private Map<LineString, Map<String, String>> lineStrings;
-        private Map<MultiPolygon, Map<String, String>> polygons;
-        private InMemoryMapDataSet data;
-        private WKTWriter wktWriter;
-
-        private OSMData() {
-            this.points = new HashMap<>();
-            this.lineStrings = new HashMap<>();
-            this.polygons = new HashMap<>();
-            this.wktWriter = new WKTWriter();
-        }
-
-        public Map<Point, Map<String, String>> getPoints() {
-            return points;
-        }
-
-        public void setPoints(Map<Point, Map<String, String>> points) {
-            this.points = points;
-        }
-
-        public Map<LineString, Map<String, String>> getLineStrings() {
-            return lineStrings;
-        }
-
-        public void setLineStrings(Map<LineString, Map<String, String>> lineStrings) {
-            this.lineStrings = lineStrings;
-        }
-
-        public Map<MultiPolygon, Map<String, String>> getPolygons() {
-            return polygons;
-        }
-
-        public void setPolygons(Map<MultiPolygon, Map<String, String>> polygons) {
-            this.polygons = polygons;
-        }
-
-
-        public void addPoint(Point point, Map<String, String> tags) {
-            this.points.put(point, tags);
-        }
-
-        public void addLineString(LineString lineString, Map<String, String> tags) {
-            this.lineStrings.put(lineString, tags);
-        }
-
-        public void addPolygon(MultiPolygon polygon, Map<String, String> tags) {
-            this.polygons.put(polygon, tags);
-        }
-
-        public InMemoryMapDataSet loadData(OsmReader reader) throws IOException, OsmInputException {
-            return this.data = MapDataSetLoader.read(reader, true, true, true);
-        }
-
-        public int getPointsSize() {
-            return this.points.size();
-        }
-
-        public int getLineStringsSize() {
-            return this.lineStrings.size();
-        }
-
-        public int getPolygonsSize() {
-            return this.polygons.size();
-        }
-
-        public String getWKTRepresentation(Geometry g) {
-            return wktWriter.write(g);
-        }
-
-        public Collection<LineString> getLine(OsmWay way) {
-            List<LineString> results = new ArrayList<>();
-            try {
-                WayBuilderResult lines = wayBuilder.build(way, data);
-                results.addAll(lines.getLineStrings());
-                if (lines.getLinearRing() != null) {
-                    results.add(lines.getLinearRing());
-                }
-            } catch (EntityNotFoundException e) {
-                // ignore
-            }
-            return results;
-        }
-
-        public MultiPolygon getPolygon(OsmWay way) {
-            try {
-                RegionBuilderResult region = regionBuilder.build(way, data);
-                return region.getMultiPolygon();
-            } catch (EntityNotFoundException e) {
-                return null;
-            }
-        }
-
-        public MultiPolygon getPolygon(OsmRelation relation) {
-            try {
-                RegionBuilderResult region = regionBuilder.build(relation, data);
-                return region.getMultiPolygon();
-            } catch (EntityNotFoundException e) {
-                return null;
-            }
-        }
     }
 }
 

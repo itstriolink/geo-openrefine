@@ -1,11 +1,11 @@
 <div class="dialog-frame" style="width: 800px;">
-    <div class="dialog-header" bind="dialogHeader"></div>
-    <div class="dialog-body" bind="dialogBody">
-        <div id="osm-extractor-tabs" class="refine-tabs">
+    <div bind="dialogHeader" class="dialog-header"></div>
+    <div bind="dialogBody" class="dialog-body">
+        <div class="refine-tabs" id="osm-extractor-tabs">
             <ul>
-                <li><a href="#tabs-query" bind="dialogQuery"></a></li>
-                <li><a href="#tabs-raw-query" bind="dialogRawQuery"></a></li>
-                <li><a href="#tabs-settings" bind="dialogSettings"></a></li>
+                <li><a bind="dialogQuery" href="#tabs-query"></a></li>
+                <li><a bind="dialogRawQuery" href="#tabs-raw-query"></a></li>
+                <li><a bind="dialogSettings" href="#tabs-settings"></a></li>
 
             </ul>
 
@@ -14,15 +14,15 @@
                     <table>
                         <tr>
                             <td>
-                                <label for="selectKey" bind="selectKey"/>
+                                <label bind="selectKey" for="selectKey"/>
                             </td>
-                            <td id="query-select-tag-key" />
+                            <td id="query-select-tag-key"/>
                         </tr>
                         <tr>
                             <td>
-                                <label for="selectValue" bind="selectValue"/>
+                                <label bind="selectValue" for="selectValue"/>
                             </td>
-                            <td id="query-select-tag-value" />
+                            <td id="query-select-tag-value"/>
                         </tr>
                     </table>
                 </div>
@@ -35,17 +35,17 @@
                                 <span bind="enterRawQuery"/>
                             </th>
                             <th>
-                                <span bind="rawQueryMappings" />
+                                <span bind="rawQueryMappings"/>
                             </th>
                         </tr>
                         <tr>
                             <td width="60%">
-                                <textarea class="raw-query-code"
-                                          bind="rawQueryInput"/>
+                                <textarea bind="rawQueryInput"
+                                          class="raw-query-code"/>
                             </td>
                             <td width="40%">
                                 <div class="column-list-container">
-                                    <table id="raw-query-response-table" bind = "columnList" width="100%">
+                                    <table bind="columnList" id="raw-query-response-table" width="100%">
                                         <thead class="header">
                                         <tr>
                                             <th width="100px">Tag Name</th>
@@ -58,10 +58,12 @@
                         </tr>
                         <tr>
                             <td>
-                                <button type="button" id="runRawQuery" bind="runRawQueryButton" class="button-secondary pure-button"/>
+                                <button bind="runRawQueryButton" class="button-secondary pure-button" id="runRawQuery"
+                                        type="button"/>
                             </td>
                             <td>
-                                <button type="button" id="saveRawQuery" bind="saveRawQueryButton" class="button-secondary pure-button"/>
+                                <button bind="saveRawQueryButton" class="button-secondary pure-button" id="saveRawQuery"
+                                        type="button"/>
                             </td>
                         </tr>
                     </table>
@@ -71,20 +73,21 @@
                 <div class="grid-layout grid-layout-for-ui layout-loose layout-full">
                     <table>
                         <tr>
-                            <th width="30%" style="vertical-align: middle;"><label for="selectInstance" bind="selectInstance"/></th>
-                            <td width="70%" id="settings-select-overpass-instance"/>
+                            <th style="vertical-align: middle;" width="30%"><label bind="selectInstance"
+                                                                                   for="selectInstance"/></th>
+                            <td id="settings-select-overpass-instance" width="70%"/>
                         </tr>
                     </table>
                 </div>
             </div>
         </div>
     </div>
-    <div class="dialog-footer" bind="dialogFooter">
+    <div bind="dialogFooter" class="dialog-footer">
         <div class="grid-layout layout-tightest layout-full">
             <table>
                 <tr>
                     <td style="text-align: right;">
-                        <button class="button" bind="cancelButton"></button>
+                        <button bind="cancelButton" class="button"></button>
                     </td>
                 </tr>
             </table>
