@@ -52,7 +52,7 @@ Refine.OSMImportingController = function (createProjectUI) {
 
     this._parsingPanel = createProjectUI.addCustomPanel();
     createProjectUI.addSourceSelectionUI({
-        label: "OpenStreetMap (using Overpass)",
+        label: "OpenStreetMap (Overpass)",
         id: "openstreetmap-overpass",
         ui: new Refine.OSMImportUI(this)
     });
@@ -75,7 +75,6 @@ Refine.OSMImportingController._overpassInstance = null;
 Refine.CreateProjectUI.controllers.push(Refine.OSMImportingController);
 
 Refine.OSMImportingController.prototype.startImportingData = function (overpassQuery, overpassInstance) {
-    var dismiss = DialogSystem.showBusy($.i18n('osm-extractor/preparing'));
     var self = this;
     self._overpassQuery = overpassQuery;
     self._overpassInstance = overpassInstance;
@@ -94,7 +93,6 @@ Refine.OSMImportingController.prototype.startImportingData = function (overpassQ
                     }),
                     null,
                     function (data2) {
-                        dismiss();
 
                         if (data2.status == 'ok') {
                             self._options = data2.options;
@@ -124,7 +122,16 @@ Refine.OSMImportingController.prototype._showParsingPanel = function () {
     this._parsingPanelElmts.configureMapping.html($.i18n('osm-extractor/configure-mapping'));
     this._parsingPanelElmts.projectName.html($.i18n('osm-extractor/project-name'));
     this._parsingPanelElmts.createProjectButton.html($.i18n('osm-extractor/create-project'));
-    this._parsingPanelElmts.statisticsHeading.html($.i18n('osm-extractor/statistics-label'));
+    this._parsingPanelElmts.includeLabel.html($.i18n('osm-extractor/include-label'));
+
+
+    this._parsingPanelElmts.pointsLabel.html($.i18n('osm-extractor/points'));
+    this._parsingPanelElmts.pointsLatLonLabel.html($.i18n('osm-extractor/points-lat-lon'));
+    this._parsingPanelElmts.pointsDelimitedLabel.html($.i18n('osm-extractor/points-delimited'));
+    this._parsingPanelElmts.pointsWKTLabel.html($.i18n('osm-extractor/points-wkt'));
+    this._parsingPanelElmts.linesLabel.html($.i18n('osm-extractor/lines-wkt'));
+    this._parsingPanelElmts.polygonsLabel.html($.i18n('osm-extractor/polygons-wkt'));
+    this._parsingPanelElmts.multiPolygonsLabel.html($.i18n('osm-extractor/multi-polygons-wkt'));
 
     this._parsingPanelElmts.loadingMessage.html($.i18n('osm-extractor/loading-message'));
 
@@ -139,16 +146,38 @@ Refine.OSMImportingController.prototype._showParsingPanel = function () {
         var headerHeight = elmts.wizardHeader.outerHeight(true);
         var controlPanelHeight = 250;
 
+        // elmts.dataPanel
+        //     .css("left", "0px")
+        //     .css("top", headerHeight + "px")
+        //     .css("width", (width - DOM.getHPaddings(elmts.dataPanel)) + "px")
+        //     .css("height", (height - headerHeight - controlPanelHeight - DOM.getVPaddings(elmts.dataPanel)) + "px");
         elmts.progressPanel
             .css("left", "0px")
             .css("top", headerHeight + "px")
             .css("width", (width - DOM.getHPaddings(elmts.progressPanel)) + "px")
             .css("height", (height - headerHeight - controlPanelHeight - DOM.getVPaddings(elmts.progressPanel)) + "px");
 
+        // elmts.controlPanel
+        //     .css("left", "0px")
+        //     .css("top", (height - controlPanelHeight) + "px")
+        //     .css("width", (width - DOM.getHPaddings(elmts.controlPanel)) + "px")
+        //     .css("height", (controlPanelHeight - DOM.getVPaddings(elmts.controlPanel)) + "px");
+
     };
     $(window).resize(this._parsingPanelResizer);
     this._parsingPanelResizer();
 
+    this._parsingPanelElmts.pointsCheckbox.change(function () {
+        if(!this.checked) {
+            $("input[name='pointsCheckbox']").each(function () {
+                $(this).prop("disabled", true);
+            });
+        } else {
+            $("input[name='pointsCheckbox']").each(function () {
+                $(this).prop("disabled", false);
+            });
+        }
+    })
     this._parsingPanelElmts.startOverButton.click(function () {
         Refine.CreateProjectUI.cancelImportingJob(self._jobID);
 
@@ -315,14 +344,12 @@ Refine.OSMImportingController.prototype._updatePreview = function () {
                     }
 
                     if (stats) {
-                        var objectLength = Object.keys(stats).length;
-                        for(var [key, value] of Object.entries(stats)) {
+                        for (var [key, value] of Object.entries(stats)) {
                             var cell = $('<td>')
-                                .attr("width", (100 / objectLength) + "%")
                                 .appendTo(self._parsingPanelElmts.statisticsRow);
 
                             $('<span>')
-                                .text(key + ": ")
+                                .text(key.charAt(0).toUpperCase() + key.slice(1) + ": ")
                                 .attr(key, value)
                                 .appendTo(cell);
 
@@ -352,20 +379,27 @@ Refine.OSMImportingController.prototype._updatePreview = function () {
 }
 
 Refine.OSMImportingController.prototype._createProject = function () {
-    var projectName = $.trim(this._parsingPanelElmts.projectNameInput[0].value);
+    var self = this;
+    var projectName = $.trim(self._parsingPanelElmts.projectNameInput[0].value);
     if (projectName.length == 0) {
         window.alert("Please enter a valid project name.");
-        this._parsingPanelElmts.projectNameInput.focus();
+        self._parsingPanelElmts.projectNameInput.focus();
         return;
     }
 
-    var self = this;
     var options = {
         "projectName": projectName,
         "encoding": "UTF-8"
     }
     var tags = [];
     var geometry = [];
+    var elementsToInclude = {
+        "points": self._parsingPanelElmts.pointsCheckbox[0].checked,
+        "pointsOption": $('input[name="pointsCheckbox"]:checked').val(),
+        "lines": self._parsingPanelElmts.linesCheckbox[0].checked,
+        "polygons": self._parsingPanelElmts.polygonsCheckbox[0].checked,
+        "multiPolygons": self._parsingPanelElmts.multiPolygonsCheckbox[0].checked
+    }
 
     $('#raw-query-response-table tbody tr.tagRow').each(function () {
         var row = $(this);
@@ -393,6 +427,7 @@ Refine.OSMImportingController.prototype._createProject = function () {
             });
         }
     });
+
     Refine.wrapCSRF(function (token) {
         $.post(
             "command/core/importing-controller?" + $.param({
@@ -404,7 +439,8 @@ Refine.OSMImportingController.prototype._createProject = function () {
             {
                 "options": JSON.stringify(options),
                 "tags": JSON.stringify(tags),
-                "geometry": JSON.stringify(geometry)
+                "geometry": JSON.stringify(geometry),
+                "elementsToInclude": JSON.stringify(elementsToInclude)
             },
             function (o) {
                 if (o.status == 'error') {

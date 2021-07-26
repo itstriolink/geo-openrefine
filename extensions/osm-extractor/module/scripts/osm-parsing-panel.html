@@ -20,17 +20,104 @@
     <div class="default-importing-parsing-data-panel mapping-table-container" bind="dataPanel">
         <table class="data-table" id="raw-query-response-table" bind="columnList"/>
     </div>
-    <div class="statistics-container">
+
+    <div class="default-importing-parsing-control-panel osm-parsing-options " bind="controlPanel">
         <table>
             <tr>
-                <td width="1px">
-                    <h2 bind="statisticsHeading"/>
+                <td>
+                    <div class="grid-layout layout-tightest">
+                        <table>
+                            <tbody>
+                            <tr>
+                                <td colspan="2">
+                                    <strong bind="includeLabel"/>
+                                </td>
+                            </tr>
+                            <table style="padding: 5px;">
+                                <tbody>
+                                <tr>
+                                    <td width="1%">
+                                        <input type="checkbox" bind="pointsCheckbox" id="$points" checked/>
+                                    </td>
+                                    <td width="99%">
+                                        <label for="$points" bind="pointsLabel"></label>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2">
+                                        <table style="margin-left: 5px;">
+                                            <tbody>
+                                            <tr>
+                                                <td colspan="2">
+                                                    <input type="radio" bind="pointsLatLonRadio" id="pointsLatLonRadio"
+                                                           name="pointsCheckbox" checked/>
+                                                    <label for="pointsLatLonRadio"><span
+                                                            bind="pointsLatLonLabel"/></label>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td colspan="2">
+                                                    <input type="radio" bind="pointsDelimitedRadio"
+                                                           id="pointsDelimitedRadio"
+                                                           name="pointsCheckbox"/>
+                                                    <label for="pointsDelimitedRadio"><span
+                                                            bind="pointsDelimitedLabel"/></label>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td colspan="2">
+                                                    <input type="radio" bind="pointsWKTRadio" id="pointsWKTRadio"
+                                                           name="pointsCheckbox"/>
+                                                    <label for="pointsWKTRadio"><span bind="pointsWKTLabel"/></label>
+                                                </td>
+                                            </tr>
+                                            </tbody>
+                                        </table>
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <td width="1%">
+                                        <input type="checkbox" bind="linesCheckbox" id="$lines" checked/>
+                                    </td>
+                                    <td width="99%">
+                                        <label for="$lines" bind="linesLabel"></label>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td width="1%">
+                                        <input type="checkbox" bind="polygonsCheckbox" id="$polygons" checked/>
+                                    </td>
+                                    <td width="99%">
+                                        <label for="$polygons" bind="polygonsLabel"></label>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td width="1%">
+                                        <input type="checkbox" bind="multiPolygonsCheckbox" id="$multiPolygons"
+                                               checked/>
+                                    </td>
+                                    <td width="99%">
+                                        <label for="$multiPolygons" bind="multiPolygonsLabel"></label>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                            </tbody>
+                        </table>
+                    </div>
                 </td>
             </tr>
-            <tr bind="statisticsRow" />
+        </table>
+    </div>
+
+    <div class="statistics-container">
+        <table>
+            <tr bind="statisticsRow" style="text-align: center;"/>
         </table>
     </div>
 </div>
+
 
 <div bind="progressPanel" class="gdata-importing-progress-data-panel">
     <img src="images/large-spinner.gif"/> <span bind="loadingMessage"></span>

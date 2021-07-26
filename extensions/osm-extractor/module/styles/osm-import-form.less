@@ -1,6 +1,6 @@
 @import-less url("../../../../main/webapp/modules/core/styles/theme.less");
 
-.raw-query-code{
+.raw-query-code {
   width: 100%;
   border: 1px solid @chrome_primary;
   height: 25em;
@@ -12,22 +12,6 @@
   margin: 1em 0;
 }
 
-#osm-extractor-tabs{
-  .ui-tabs-panel {
-    padding: @padding_looser;
-  }
-
-  select {
-    padding: @padding_tighter;
-    font-size: 1em;
-    width: 250px;
-    font-family: inherit;
-    border: #ccc 1px solid;
-    border-top: #888 1px solid;
-    vertical-align: baseline;
-  }
-}
-
 .osm-extractor-dialog-row {
   .includeTagCheckbox {
     margin-right: 0.3em;
@@ -37,37 +21,59 @@
 
 .main-container {
   width: 400px;
+  height: 100%;
+
   table {
     width: 100%;
   }
+
   .mapping-table-container {
     position: static;
-    max-height: 500px;
+    height: 70%;
+
     .text-center {
       text-align: center;
     }
   }
 
-  .statistics-container {
-    margin-top: 20px;
-    padding: 15px;
-    background-color: @fill_secondary;
+  .osm-parsing-options {
+    position: static;
+    padding: @padding_normal;
+    height: 30%;
+  }
 
-    h2{
-      margin-bottom: 10px;
-    }
 
-    span {
-      font-size: 1.125em;
-    }
+}
+.osm-extractor-settings-container {
+  width: 100%;
+}
+.statistics-container {
+  padding: 2em;
+  width: 30em;
+  position: fixed;
+  bottom: 0;
+  right: 0;
+  z-index: 1;
+  background-color: @fill_secondary;
+
+  table {
+    width: 100%;
+  }
+
+  h2 {
+    margin-bottom: 1em;
+  }
+
+  span {
+    font-size: 1.125em;
   }
 }
 
-
-.column-list-container{
+.column-list-container {
   height: 100%;
   padding: @padding_tighter;
   overflow-y: auto;
+
   .osm-extractor-columns {
     border: 1px solid @chrome_primary;
     padding: @padding_loose;
