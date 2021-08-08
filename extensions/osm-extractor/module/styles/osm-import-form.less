@@ -13,23 +13,40 @@
 }
 
 .osm-extractor-dialog-row {
-  .includeTagCheckbox {
+  .includeTagCheckbox, .includeGeometryCheckbox {
     margin-right: 0.3em;
     vertical-align: bottom;
   }
 }
 
 .main-container {
-  width: 400px;
+  width: 50%;
   height: 100%;
 
   table {
+    width: 100%;
+    height: 100%;
+  }
+  .geometry-table {
+    height: 100%;
+    width: 100%;
+  }
+
+  .tags-table {
+    height: 100%;
+    width: 100%;
+    overflow-y: scroll;
+  }
+
+  .select-unselect-all {
+    height: 100%;
     width: 100%;
   }
 
   .mapping-table-container {
     position: static;
     height: 70%;
+    overflow: hidden;
 
     .text-center {
       text-align: center;
@@ -74,7 +91,6 @@
 .column-list-container {
   height: 100%;
   padding: @padding_tighter;
-  overflow-y: auto;
 
   .osm-extractor-columns {
     border: 1px solid @chrome_primary;

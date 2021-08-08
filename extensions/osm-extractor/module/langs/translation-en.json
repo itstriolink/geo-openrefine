@@ -33,5 +33,7 @@
   "osm-extractor/save-query": "Save",
   "osm-extractor/select-overpass-instance": "Select the Overpass API instance: ",
   "osm-extractor/overpass-instance-error": "Something went wrong while fetching the Overpass API instances",
-  "osm-extractor/osm-tags-error": "Something went wrong while fetching the OSM tags"
+  "osm-extractor/osm-tags-error": "Something went wrong while fetching the OSM tags",
+  "osm-extractor/select-all-tags": "Select All Tags",
+  "osm-extractor/deselect-all-tags": "De-select All Tags"
 }

@@ -124,6 +124,8 @@ Refine.OSMImportingController.prototype._showParsingPanel = function () {
     this._parsingPanelElmts.createProjectButton.html($.i18n('osm-extractor/create-project'));
     this._parsingPanelElmts.includeLabel.html($.i18n('osm-extractor/include-label'));
 
+    this._parsingPanelElmts.selectAllButton.html($.i18n('osm-extractor/select-all-tags'));
+    this._parsingPanelElmts.deselectAllButton.html($.i18n('osm-extractor/deselect-all-tags'));
 
     this._parsingPanelElmts.pointsLabel.html($.i18n('osm-extractor/points'));
     this._parsingPanelElmts.pointsLatLonLabel.html($.i18n('osm-extractor/points-lat-lon'));
@@ -157,12 +159,6 @@ Refine.OSMImportingController.prototype._showParsingPanel = function () {
             .css("width", (width - DOM.getHPaddings(elmts.progressPanel)) + "px")
             .css("height", (height - headerHeight - controlPanelHeight - DOM.getVPaddings(elmts.progressPanel)) + "px");
 
-        // elmts.controlPanel
-        //     .css("left", "0px")
-        //     .css("top", (height - controlPanelHeight) + "px")
-        //     .css("width", (width - DOM.getHPaddings(elmts.controlPanel)) + "px")
-        //     .css("height", (controlPanelHeight - DOM.getVPaddings(elmts.controlPanel)) + "px");
-
     };
     $(window).resize(this._parsingPanelResizer);
     this._parsingPanelResizer();
@@ -171,16 +167,27 @@ Refine.OSMImportingController.prototype._showParsingPanel = function () {
 
     this._parsingPanelElmts.pointsCheckbox.change(function () {
         if (!this.checked) {
-            $("input[name='pointsCheckbox'], input#pointsDelimitedSeparatorInput").each(function () {
+            $("input.pointsCheckboxes, input#pointsDelimitedSeparatorInput").each(function () {
                 $(this).prop("disabled", true);
             });
 
         } else {
-            $("input[name='pointsCheckbox'], input#pointsDelimitedSeparatorInput").each(function () {
+            $("input.pointsCheckboxes, input#pointsDelimitedSeparatorInput").each(function () {
                 $(this).prop("disabled", false);
             });
         }
-    })
+    });
+
+    this._parsingPanelElmts.selectAllButton.click(function () {
+        self._parsingPanelElmts.tagsTable.find('input[type="checkbox"]').prop('checked', true);
+        self._parsingPanelElmts.tagsTable.find('input[type="text"]').prop("disabled", false);
+    });
+
+    this._parsingPanelElmts.deselectAllButton.click(function () {
+        self._parsingPanelElmts.tagsTable.find('input[type="checkbox"]').prop('checked', false);
+        self._parsingPanelElmts.tagsTable.find('input[type="text"]').prop("disabled", true);
+    });
+
     this._parsingPanelElmts.startOverButton.click(function () {
         Refine.CreateProjectUI.cancelImportingJob(self._jobID);
 
@@ -194,7 +201,7 @@ Refine.OSMImportingController.prototype._showParsingPanel = function () {
         self._createProject();
     });
 
-    this._parsingPanelElmts.projectNameInput[0].value = "OpenstreetMap project";
+    this._parsingPanelElmts.projectNameInput[0].value = "OpenstreetMap (from Overpass) project";
 
     this._createProjectUI.showCustomPanel(this._parsingPanel);
     this._updatePreview();
@@ -204,6 +211,7 @@ Refine.OSMImportingController.prototype._updatePreview = function () {
     var self = this;
 
     self._parsingPanelElmts.mainContainer.hide();
+    self._parsingPanelElmts.statisticsContainer.hide();
     self._parsingPanelElmts.progressPanel.show();
     self._parsingPanelElmts.createProjectButton.addClass("button-disabled").prop("disabled", true);
 
@@ -224,12 +232,13 @@ Refine.OSMImportingController.prototype._updatePreview = function () {
                     $(".osm-extractor-dialog-row").remove();
                     self._parsingPanelElmts.progressPanel.hide();
                     self._parsingPanelElmts.mainContainer.show();
+                    self._parsingPanelElmts.statisticsContainer.show();
 
                     var tags = result.tags;
                     var geometry = result.geometry;
                     var stats = result.stats;
                     if (geometry && geometry.length > 0) {
-                        var geometryHeaderRow = $('<tr>').appendTo(self._parsingPanelElmts.columnList);
+                        var geometryHeaderRow = $('<tr>').appendTo(self._parsingPanelElmts.geometryTable);
                         var geometryHeaderCell = $('<td>')
                             .addClass("column-header")
                             .addClass("text-center")
@@ -237,7 +246,7 @@ Refine.OSMImportingController.prototype._updatePreview = function () {
                             .html("Geometry")
                             .appendTo(geometryHeaderRow);
 
-                        var geometryHeaderCells = $('<tr>').appendTo(self._parsingPanelElmts.columnList);
+                        var geometryHeaderCells = $('<tr>').appendTo(self._parsingPanelElmts.geometryTable);
                         $('<td>').addClass("column-header").html(" ").appendTo(geometryHeaderCells);
                         $('<td>').addClass("column-header").html("Coordinate").appendTo(geometryHeaderCells);
                         $('<td>').addClass("column-header").html("Column name").appendTo(geometryHeaderCells);
@@ -248,12 +257,15 @@ Refine.OSMImportingController.prototype._updatePreview = function () {
                                 .addClass("geometryRow")
                                 .addClass(i % 2 == 0 ? "odd" : "even")
                                 .attr("rowIndex", i)
-                                .appendTo(self._parsingPanelElmts.columnList);
+                                .appendTo(self._parsingPanelElmts.geometryTable);
 
                             var indexCell = $('<td>')
+                                .attr("width", "10%")
                                 .appendTo(row);
 
-                            var geometryNameCell = $('<td>').appendTo(row);
+                            var geometryNameCell = $('<td>')
+                                .attr("width", "45%")
+                                .appendTo(row);
                             var geometryNameDiv = $('<div>').addClass("data-table-cell-content").appendTo(geometryNameCell);
 
                             $('<div>')
@@ -263,18 +275,21 @@ Refine.OSMImportingController.prototype._updatePreview = function () {
 
                             $('<input>')
                                 .attr('type', 'checkbox')
-                                .attr("id", "checkbox-" + i)
-                                .attr("class", "includeTagCheckbox")
+                                .attr("id", "geometryCheckbox-" + i)
+                                .attr("class", "includeGeometryCheckbox")
                                 .prop('checked', true)
                                 .attr("rowIndex", i)
                                 .appendTo(geometryNameDiv);
-                            $('<span>')
+                            $('<label>')
                                 .text(coordinate)
-                                .attr("class", "osmTagName")
+                                .attr("for", "geometryCheckbox-" + i)
+                                .attr("class", "geometryName")
                                 .attr("rowIndex", i)
                                 .appendTo(geometryNameDiv);
 
-                            var newColumnNameCell = $('<td>').appendTo(row);
+                            var newColumnNameCell = $('<td>')
+                                .attr("width", "45%")
+                                .appendTo(row);
                             var newColumnNameDiv = $('<div>').addClass("data-table-cell-content").appendTo(newColumnNameCell);
 
                             $('<input>')
@@ -287,18 +302,17 @@ Refine.OSMImportingController.prototype._updatePreview = function () {
                     }
 
                     if (tags && tags.length > 0) {
-                        var tagsHeaderRow = $('<tr>').appendTo(self._parsingPanelElmts.columnList);
+                        var tagsHeaderRow = $('<tr>').appendTo(self._parsingPanelElmts.tagsTable);
                         var tagsHeaderCell = $('<td>')
                             .addClass("column-header")
                             .addClass("text-center")
                             .attr("colspan", 3)
                             .html("Tags")
                             .appendTo(tagsHeaderRow);
-                        var tagsHeaderCells = $('<tr>').appendTo(self._parsingPanelElmts.columnList);
+                        var tagsHeaderCells = $('<tr>').appendTo(self._parsingPanelElmts.tagsTable);
                         var indexHeaderCell = $('<td>').addClass("column-header").html(" ").appendTo(tagsHeaderCells);
                         var tagHeaderCell = $('<td>').addClass("column-header").html("Tag name").appendTo(tagsHeaderCells);
                         var newColumnHeaderCell = $('<td>').addClass("column-header").html("Column name").appendTo(tagsHeaderCells);
-
                         for (var i = 0; i < tags.length; i++) {
                             var column = tags[i];
                             var row = $('<tr>')
@@ -307,12 +321,13 @@ Refine.OSMImportingController.prototype._updatePreview = function () {
                                 .addClass(i % 2 == 0 ? "odd" : "even")
                                 .attr("column", column)
                                 .attr("rowIndex", i)
-                                .appendTo(self._parsingPanelElmts.columnList);
+                                .appendTo(self._parsingPanelElmts.tagsTable);
 
                             var indexCell = $('<td>')
+                                .attr("width", "10%")
                                 .appendTo(row);
 
-                            var tagNameCell = $('<td>').appendTo(row);
+                            var tagNameCell = $('<td>').attr("width", "45%").appendTo(row);
                             var tagNameDiv = $('<div>').addClass("data-table-cell-content").appendTo(tagNameCell);
                             $('<div>')
                                 .text((i + 1) + ".")
@@ -321,19 +336,20 @@ Refine.OSMImportingController.prototype._updatePreview = function () {
 
                             $('<input>')
                                 .attr('type', 'checkbox')
-                                .attr("id", "checkbox-" + i)
+                                .attr("id", "tagCheckbox-" + i)
                                 .prop("checked", i == 0 ? true : false)
                                 .attr("class", "includeTagCheckbox")
                                 .attr("rowIndex", i)
                                 .appendTo(tagNameDiv);
 
-                            $('<span>')
+                            $('<label>')
                                 .text(column)
+                                .attr("for", "tagCheckbox-" + i)
                                 .attr("class", "osmTagName")
                                 .attr("rowIndex", i)
                                 .appendTo(tagNameDiv);
 
-                            var newColumnNameCell = $('<td>').appendTo(row);
+                            var newColumnNameCell = $('<td>').attr("width", "45%").appendTo(row);
                             var newColumnNameDiv = $('<div>').addClass("data-table-cell-content").appendTo(newColumnNameCell);
 
                             $('<input>')
@@ -361,7 +377,7 @@ Refine.OSMImportingController.prototype._updatePreview = function () {
                                 .appendTo(cell);
                         }
                     }
-                    $(".includeTagCheckbox").click(function () {
+                    $(".includeTagCheckbox, .includeGeometryCheckbox").click(function () {
                         if (this.checked) {
                             $(this).parent().parent().siblings().find("input.newColumnName").attr("disabled", false);
                         } else {
@@ -398,35 +414,38 @@ Refine.OSMImportingController.prototype._createProject = function () {
     var geometry = [];
     var osmOptions = {
         "points": self._parsingPanelElmts.pointsCheckbox[0].checked,
-        "pointsOption": $('input[name="pointsCheckbox"]:checked').val(),
-        "pointsSeparator": $('input#pointsDelimitedSeparatorInput').val(),
+        "pointsAsLatLon": self._parsingPanelElmts.pointsLatLonCheckbox[0].checked,
+        "pointsDelimited": self._parsingPanelElmts.pointsDelimitedCheckbox[0].checked,
+        "pointsSeparator": self._parsingPanelElmts.pointsDelimitedSeparatorInput.val(),
+        "pointsAsWKT": self._parsingPanelElmts.pointsWKTCheckbox[0].checked,
         "lines": self._parsingPanelElmts.linesCheckbox[0].checked,
         "polygons": self._parsingPanelElmts.polygonsCheckbox[0].checked,
         "multiPolygons": self._parsingPanelElmts.multiPolygonsCheckbox[0].checked
     }
 
-    $('#raw-query-response-table tbody tr.tagRow').each(function () {
-        var row = $(this);
-        var checkbox = row.find('input.includeTagCheckbox')[0];
-        var osmTag = row.find('span.osmTagName').html();
-        var newColumnName = row.find('input.newColumnName').val();
-
-        if (checkbox && checkbox.checked) {
-            tags.push({
-                osmTag,
-                newColumnName,
-            });
-        }
-    });
     $('#raw-query-response-table tbody tr.geometryRow').each(function () {
         var row = $(this);
-        var checkbox = row.find('input.includeTagCheckbox')[0];
-        var coordinate = row.find('span.osmTagName').html();
+        var checkbox = row.find('input.includeGeometryCheckbox')[0];
+        var coordinate = row.find('label.geometryName').html();
         var newColumnName = row.find('input.newColumnName').val();
 
         if (checkbox && checkbox.checked) {
             geometry.push({
                 coordinate,
+                newColumnName,
+            });
+        }
+    });
+
+    $('#raw-query-response-table tbody tr.tagRow').each(function () {
+        var row = $(this);
+        var checkbox = row.find('input.includeTagCheckbox')[0];
+        var osmTag = row.find('label.osmTagName').html();
+        var newColumnName = row.find('input.newColumnName').val();
+
+        if (checkbox && checkbox.checked) {
+            tags.push({
+                osmTag,
                 newColumnName,
             });
         }

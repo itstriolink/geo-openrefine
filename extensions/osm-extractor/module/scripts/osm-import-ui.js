@@ -62,10 +62,6 @@ Refine.OSMImportUI.prototype.attachUI = function (body) {
         var overpassQuery = self._elmts.rawQueryInput[0] && self._elmts.rawQueryInput[0].value;
         var overpassAPI = $("#selectInstance").val();
 
-        if (!overpassQuery) {
-            return window.alert($.i18n('osm-extractor/alert-empty-query'));
-        }
-
         self._controller.startImportingData(overpassQuery, overpassAPI);
     });
 }

@@ -17,7 +17,10 @@ import org.locationtech.jts.io.WKTWriter;
 import java.io.IOException;
 import java.util.*;
 
-public class OSMData {
+public class OSMExtractor {
+    private String overpassInstance;
+    private String overpassQuery;
+
     private final Map<Point, Map<String, String>> points;
     private final Map<LineString, Map<String, String>> lineStrings;
     private final Map<MultiPolygon, Map<String, String>> multiPolygons;
@@ -28,15 +31,31 @@ public class OSMData {
     private InMemoryMapDataSet data;
 
 
-    public OSMData() {
+    public OSMExtractor() {
         this.points = new HashMap<>();
         this.lineStrings = new HashMap<>();
         this.multiPolygons = new HashMap<>();
 
-        geometryBuilder = new GeometryBuilder();
-        wayBuilder = new WayBuilder();
-        regionBuilder = new RegionBuilder();
+        this.geometryBuilder = new GeometryBuilder();
+        this.wayBuilder = new WayBuilder();
+        this.regionBuilder = new RegionBuilder();
         this.wktWriter = new WKTWriter();
+    }
+
+    public String getOverpassInstance() {
+        return overpassInstance;
+    }
+
+    public void setOverpassInstance(String overpassInstance) {
+        this.overpassInstance = overpassInstance;
+    }
+
+    public String getOverpassQuery() {
+        return overpassQuery;
+    }
+
+    public void setOverpassQuery(String overpassQuery) {
+        this.overpassQuery = overpassQuery;
     }
 
     public Map<Point, Map<String, String>> getPoints() {

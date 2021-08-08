@@ -18,7 +18,38 @@
 </div>
 <div bind="mainContainer" class="main-container">
     <div bind="dataPanel" class="default-importing-parsing-data-panel mapping-table-container">
-        <table bind="columnList" class="data-table" id="raw-query-response-table"/>
+        <table bind="columnList" id="raw-query-response-table">
+            <tbody>
+            <tr style="height: 30%;">
+                <td>
+                    <div class="geometry-table">
+                        <table class="data-table" bind="geometryTable"/>
+                    </div>
+                </td>
+            </tr>
+            <tr style="height: 65%;">
+                <td>
+                    <div class="tags-table">
+                        <table class="data-table" bind="tagsTable"/>
+                    </div>
+                </td>
+            </tr>
+            <tr style="height: 5%;">
+                <td>
+                    <div class="select-unselect-all">
+                        <table class="data-table" bind="selectUnselectAllTable" style="text-align: center;">
+                            <tr class="odd">
+                                <td width="100%">
+                                    <button class="button" bind="selectAllButton"></button>
+                                    <button class="button" bind="deselectAllButton"></button>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </td>
+            </tr>
+            </tbody>
+        </table>
     </div>
 
     <div bind="controlPanel" class="default-importing-parsing-control-panel osm-parsing-options ">
@@ -49,37 +80,39 @@
                                             <tbody>
                                             <tr>
                                                 <td colspan="2">
-                                                    <input bind="pointsLatLonRadio"
+                                                    <input bind="pointsLatLonCheckbox"
+                                                           id="pointsLatLonCheckbox"
+                                                           class="pointsCheckboxes"
+                                                           name="pointsLatLonCheckbox"
+                                                           type="checkbox"
                                                            checked
-                                                           id="pointsLatLonRadio"
-                                                           name="pointsCheckbox"
-                                                           type="radio"
-                                                           value="latlon"
                                                     />
-                                                    <label for="pointsLatLonRadio"><span
+                                                    <label for="pointsLatLonCheckbox"><span
                                                             bind="pointsLatLonLabel"/></label>
                                                 </td>
                                             </tr>
                                             <tr>
                                                 <td colspan="2">
-                                                    <input bind="pointsDelimitedRadio" id="pointsDelimitedRadio"
+                                                    <input bind="pointsDelimitedCheckbox"
+                                                           id="pointsDelimitedCheckbox"
                                                            name="pointsCheckbox"
-                                                           type="radio"
-                                                           value="delimited"/>
-                                                    <label for="pointsDelimitedRadio"><span
+                                                           type="checkbox"
+                                                           class="pointsCheckboxes"/>
+                                                    <label for="pointsDelimitedCheckbox"><span
                                                             bind="pointsDelimitedLabel"/></label>
-                                                    <input bind="pointsDelimitedSeparatorInput" id="pointsDelimitedSeparatorInput" size="5"
+                                                    <input bind="pointsDelimitedSeparatorInput"
+                                                           id="pointsDelimitedSeparatorInput" size="5"
                                                            type="text"/>
                                                 </td>
                                             </tr>
                                             <tr>
                                                 <td colspan="2">
-                                                    <input bind="pointsWKTRadio"
-                                                           id="pointsWKTRadio"
+                                                    <input bind="pointsWKTCheckbox"
+                                                           id="pointsWKTCheckbox"
                                                            name="pointsCheckbox"
-                                                           type="radio"
-                                                           value="wkt"/>
-                                                    <label for="pointsWKTRadio"><span bind="pointsWKTLabel"/></label>
+                                                           class="pointsCheckboxes"
+                                                           type="checkbox"/>
+                                                    <label for="pointsWKTCheckbox"><span bind="pointsWKTLabel"/></label>
                                                 </td>
                                             </tr>
                                             </tbody>
@@ -122,7 +155,7 @@
         </table>
     </div>
 
-    <div class="statistics-container">
+    <div class="statistics-container" bind="statisticsContainer">
         <table>
             <tr bind="statisticsRow" style="text-align: center;"/>
         </table>
