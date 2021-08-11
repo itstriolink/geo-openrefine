@@ -251,6 +251,7 @@ Refine.OSMImportingController.prototype._updatePreview = function () {
                         var newColumnHeaderCell = $('<td>').addClass("column-header").html("Column name").appendTo(tagsHeaderCells);
                         for (var i = 0; i < tags.length; i++) {
                             var column = tags[i];
+
                             var row = $('<tr>')
                                 .addClass("osm-extractor-dialog-row")
                                 .addClass("tagRow")

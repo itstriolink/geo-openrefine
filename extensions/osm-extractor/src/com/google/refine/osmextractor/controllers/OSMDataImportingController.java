@@ -13,6 +13,7 @@ import com.google.refine.importing.ImportingManager;
 import com.google.refine.model.*;
 import com.google.refine.osmextractor.extractor.OSMExtractor;
 import com.google.refine.osmextractor.util.Constants;
+import com.google.refine.osmextractor.util.OSMTags;
 import com.google.refine.osmextractor.util.Util;
 import com.google.refine.util.JSONUtilities;
 import com.google.refine.util.ParsingUtilities;
@@ -46,6 +47,7 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class OSMDataImportingController implements ImportingController {
     private static final Logger logger = LoggerFactory.getLogger("OSMDataImportingController");
@@ -213,12 +215,31 @@ public class OSMDataImportingController implements ImportingController {
                 }
             }
 
-            List<String> tags = tagsMap.entrySet().stream()
+            Map<String, Integer> mainTagsMap = new HashMap<>();
+            Map<String, Integer> otherTagsMap = new HashMap<>();
+
+            for(Map.Entry<String, Integer> tag: tagsMap.entrySet()) {
+                if(OSMTags.MAIN_TAGS.contains(tag.getKey())) {
+                    mainTagsMap.put(tag.getKey(), tag.getValue());
+                } else {
+                    otherTagsMap.put(tag.getKey(), tag.getValue());
+                }
+            }
+
+            List<String> mainTags = mainTagsMap.entrySet().stream()
                     .sorted(Comparator.comparing(Map.Entry::getValue, Comparator.reverseOrder()))
                     .map(Map.Entry::getKey)
                     .collect(Collectors.toList());
 
-            for (String tagName : tags) {
+            List<String> otherTags = otherTagsMap.entrySet().stream()
+                    .sorted(Comparator.comparing(Map.Entry::getValue, Comparator.reverseOrder()))
+                    .map(Map.Entry::getKey)
+                    .collect(Collectors.toList());
+
+            List<String> finalTags = Stream.concat(mainTags.stream(), otherTags.stream())
+                    .collect(Collectors.toList());
+
+            for (String tagName : finalTags) {
                 JSONUtilities.append(tagsNode, tagName);
             }
 
