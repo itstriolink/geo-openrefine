@@ -12,6 +12,7 @@ import com.google.refine.importing.ImportingJob;
 import com.google.refine.importing.ImportingManager;
 import com.google.refine.model.*;
 import com.google.refine.osmextractor.extractor.OSMExtractor;
+import com.google.refine.osmextractor.util.Constants;
 import com.google.refine.osmextractor.util.Util;
 import com.google.refine.util.JSONUtilities;
 import com.google.refine.util.ParsingUtilities;
@@ -120,7 +121,6 @@ public class OSMDataImportingController implements ImportingController {
             job.prepareNewProject();
             job.setProgress(-1, "Parsing OpenStreetMap data...");
             ArrayNode tagsNode = ParsingUtilities.mapper.createArrayNode();
-            ArrayNode geometryNode = ParsingUtilities.mapper.createArrayNode();
             ObjectNode statsNode = ParsingUtilities.mapper.createObjectNode();
 
             String encodedQuery = URLEncoder.encode(osmExtractor.getOverpassQuery(), "UTF-8");
@@ -230,12 +230,8 @@ public class OSMDataImportingController implements ImportingController {
 
             JSONUtilities.safePut(result, "status", "ok");
             JSONUtilities.safePut(result, "tags", tagsNode);
-            JSONUtilities.safePut(result, "geometry", geometryNode);
             JSONUtilities.safePut(result, "stats", statsNode);
 
-            JSONUtilities.append(geometryNode, "lat");
-            JSONUtilities.append(geometryNode, "lon");
-            JSONUtilities.append(geometryNode, "WKT");
             HttpUtilities.respondJSON(response, result);
         } catch (IOException | OsmInputException | EntityNotFoundException e) {
             logger.error(ExceptionUtils.getStackTrace(e));
@@ -260,17 +256,16 @@ public class OSMDataImportingController implements ImportingController {
         final ObjectNode projectOptions = ParsingUtilities.evaluateJsonStringToObjectNode(
                 request.getParameter("projectOptions"));
         final ArrayNode tags = ParsingUtilities.evaluateJsonStringToArrayNode(request.getParameter("tags"));
-        final ArrayNode geometry = ParsingUtilities.evaluateJsonStringToArrayNode(request.getParameter("geometry"));
-        final ObjectNode osmOptions = ParsingUtilities.evaluateJsonStringToObjectNode(request.getParameter("osmOptions"));
+        final ObjectNode importOptions = ParsingUtilities.evaluateJsonStringToObjectNode(request.getParameter("importOptions"));
 
-        boolean includePoints = osmOptions.get("points").asBoolean(false);
-        boolean pointsAsLatLon = osmOptions.get("pointsAsLatLon").asBoolean(false);
-        boolean pointsDelimited = osmOptions.get("pointsDelimited").asBoolean(false);
-        String pointsSeparator = osmOptions.get("pointsSeparator").asText(", ");
-        boolean pointsAsWKT = osmOptions.get("pointsAsWKT").asBoolean(false);
-        boolean includeLineStrings = osmOptions.get("lines").asBoolean(false);
-        boolean includePolygons = osmOptions.get("polygons").asBoolean(false);
-        boolean includeMultiPolygons = osmOptions.get("multiPolygons").asBoolean(false);
+        boolean includePoints = importOptions.get("points").asBoolean(false);
+        boolean pointsAsLatLon = importOptions.get("pointsAsLatLon").asBoolean(false);
+        boolean pointsDelimited = importOptions.get("pointsDelimited").asBoolean(false);
+        String pointsSeparator = importOptions.get("pointsSeparator").asText(", ");
+        boolean pointsAsWKT = importOptions.get("pointsAsWKT").asBoolean(false);
+        boolean includeLineStrings = importOptions.get("lines").asBoolean(false);
+        boolean includePolygons = importOptions.get("polygons").asBoolean(false);
+        boolean includeMultiPolygons = importOptions.get("multiPolygons").asBoolean(false);
 
         job.setState("creating-project");
 
@@ -281,39 +276,23 @@ public class OSMDataImportingController implements ImportingController {
             pm.setEncoding(JSONUtilities.getString(projectOptions, "encoding", "UTF-8"));
             pm.setDescription("OpenStreetMap data initially generated using Overpass API with the following query: " + osmExtractor.getOverpassQuery());
 
-            String latitudeColumnName = "";
-            String longitudeColumnName = "";
-            String WKTColumnName = "";
+            if ((includePoints && pointsAsWKT) || includeLineStrings || includePolygons || includeMultiPolygons) {
+                createColumn(project, Constants.Importing.wktColumnName, Constants.Importing.generatedColumnDescription);
 
-            Map<String, String> tagMappings = new HashMap<>();
+                if (includePoints) {
+                    if (pointsAsLatLon) {
+                        createColumn(project, Constants.Importing.latitudeColumnName, Constants.Importing.generatedColumnDescription);
+                        createColumn(project, Constants.Importing.longitudeColumnName, Constants.Importing.generatedColumnDescription);
+                    }
 
-            if (geometry != null && geometry.size() > 0) {
-                for (JsonNode node : geometry) {
-                    if (node instanceof ObjectNode) {
-                        ObjectNode obj = (ObjectNode) node;
-                        String newColumnName = obj.get("newColumnName").asText();
-                        String coordinate = obj.get("coordinate").asText();
-                        if (coordinate.equals("WKT")) {
-                            WKTColumnName = newColumnName;
-
-                            createColumn(project, newColumnName);
-                            continue;
-                        }
-
-                        if (pointsAsLatLon) {
-                            if (coordinate.equals("lat")) {
-                                latitudeColumnName = newColumnName;
-                            } else if (coordinate.equals("lon")) {
-                                longitudeColumnName = newColumnName;
-                            }
-
-
-                            createColumn(project, newColumnName);
-                        }
-
+                    if (pointsDelimited) {
+                        createColumn(project, Constants.Importing.pointDelimitedColumnName, Constants.Importing.generatedColumnDescription);
                     }
                 }
             }
+
+            Map<String, String> tagMappings = new HashMap<>();
+
             if (tags != null && tags.size() > 0) {
                 for (JsonNode node : tags) {
                     if (node instanceof ObjectNode) {
@@ -360,11 +339,13 @@ public class OSMDataImportingController implements ImportingController {
 
                         String value;
 
-                        if (columnName.equals(latitudeColumnName)) {
+                        if (pointsAsLatLon && columnName.equals(Constants.Importing.latitudeColumnName)) {
                             value = String.valueOf(latitude);
-                        } else if (columnName.equals(longitudeColumnName)) {
+                        } else if (pointsAsLatLon && columnName.equals(Constants.Importing.longitudeColumnName)) {
                             value = String.valueOf(longitude);
-                        } else if (columnName.equals(WKTColumnName)) {
+                        } else if (pointsDelimited && columnName.equals(Constants.Importing.pointDelimitedColumnName)) {
+                            value = String.format("%f%s%f", latitude, pointsSeparator, (longitude));
+                        } else if (pointsAsWKT && columnName.equals(Constants.Importing.wktColumnName)) {
                             value = osmExtractor.getWKTRepresentation(point);
                         } else if (originalTagName != null && currentTags.get(originalTagName) != null) {
                             value = currentTags.get(originalTagName);
@@ -395,7 +376,7 @@ public class OSMDataImportingController implements ImportingController {
 
                         String value;
 
-                        if (columnName.equals(WKTColumnName)) {
+                        if (columnName.equals(Constants.Importing.wktColumnName)) {
                             value = osmExtractor.getWKTRepresentation(lineString);
                         } else if (originalTagName != null && currentTags.get(originalTagName) != null) {
                             value = currentTags.get(originalTagName);
@@ -427,7 +408,7 @@ public class OSMDataImportingController implements ImportingController {
 
                         String value;
 
-                        if (columnName.equals(WKTColumnName)) {
+                        if (columnName.equals(Constants.Importing.wktColumnName)) {
                             value = osmExtractor.getWKTRepresentation(polygon);
                         } else if (originalTagName != null && currentTags.get(originalTagName) != null) {
                             value = currentTags.get(originalTagName);
@@ -464,11 +445,19 @@ public class OSMDataImportingController implements ImportingController {
         HttpUtilities.respond(response, "ok", "done");
     }
 
+    private static void createColumn(Project project, String columnName) {
+        createColumn(project, columnName, null);
+    }
 
-    private static void createColumn(Project project, String newColumnName) {
-        if (newColumnName != null && !newColumnName.trim().isEmpty()) {
+    private static void createColumn(Project project, String columnName, String columnDescription) {
+        if (columnName != null && !columnName.trim().isEmpty()) {
             try {
-                Column column = new Column(project.columnModel.allocateNewCellIndex(), newColumnName);
+                Column column = new Column(project.columnModel.allocateNewCellIndex(), columnName);
+
+                if(columnDescription != null && !columnDescription.trim().isEmpty()) {
+                    column.setDescription(columnDescription);
+                }
+
                 project.columnModel.addColumn(
                         project.columnModel.columns.size(),
                         column,

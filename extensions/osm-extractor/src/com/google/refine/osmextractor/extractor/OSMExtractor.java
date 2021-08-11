@@ -8,10 +8,7 @@ import de.topobyte.osm4j.core.model.iface.OsmRelation;
 import de.topobyte.osm4j.core.model.iface.OsmWay;
 import de.topobyte.osm4j.core.resolve.EntityNotFoundException;
 import de.topobyte.osm4j.geometry.*;
-import org.locationtech.jts.geom.Geometry;
-import org.locationtech.jts.geom.LineString;
-import org.locationtech.jts.geom.MultiPolygon;
-import org.locationtech.jts.geom.Point;
+import org.locationtech.jts.geom.*;
 import org.locationtech.jts.io.WKTWriter;
 
 import java.io.IOException;
@@ -23,6 +20,7 @@ public class OSMExtractor {
 
     private final Map<Point, Map<String, String>> points;
     private final Map<LineString, Map<String, String>> lineStrings;
+    private final Map<Polygon, Map<String, String>> polygons;
     private final Map<MultiPolygon, Map<String, String>> multiPolygons;
     private final GeometryBuilder geometryBuilder;
     private final WayBuilder wayBuilder;
@@ -34,6 +32,7 @@ public class OSMExtractor {
     public OSMExtractor() {
         this.points = new HashMap<>();
         this.lineStrings = new HashMap<>();
+        this.polygons = new HashMap<>();
         this.multiPolygons = new HashMap<>();
 
         this.geometryBuilder = new GeometryBuilder();
@@ -78,6 +77,10 @@ public class OSMExtractor {
 
     public void addLineString(LineString lineString, Map<String, String> tags) {
         this.lineStrings.put(lineString, tags);
+    }
+
+    public void addPolygon(Polygon polygon, Map<String, String> tags) {
+        this.polygons.put(polygon, tags);
     }
 
     public void addPolygon(MultiPolygon polygon, Map<String, String> tags) {
