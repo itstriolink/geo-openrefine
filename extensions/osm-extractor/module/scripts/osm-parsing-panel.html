@@ -6,9 +6,9 @@
                     <button bind="startOverButton" class="button"></button>
                 </td>
                 <td width="1px"></td>
-                <td width="auto" bind="configureMapping"></td>
-                <td style="text-align: right;" bind="projectName"></td>
-                <td width="1%"><input class="inline" type="text" size="30" bind="projectNameInput"/></td>
+                <td bind="configureMapping" width="auto"></td>
+                <td bind="projectName" style="text-align: right;"></td>
+                <td width="1%"><input bind="projectNameInput" class="inline" size="30" type="text"/></td>
                 <td width="1%">
                     <button bind="createProjectButton" class="button button-primary"></button>
                 </td>
@@ -16,21 +16,145 @@
         </table>
     </div>
 </div>
-<div class="main-container" bind="mainContainer">
-    <div class="default-importing-parsing-data-panel mapping-table-container" bind="dataPanel">
-        <table class="data-table" id="raw-query-response-table" bind="columnList"/>
-    </div>
-    <div class="statistics-container">
-        <table>
-            <tr>
-                <td width="1px">
-                    <h2 bind="statisticsHeading"/>
+<div bind="mainContainer" class="main-container">
+    <div bind="dataPanel" class="default-importing-parsing-data-panel mapping-table-container">
+        <table bind="columnList" id="raw-query-response-table">
+            <tbody>
+            <tr style="height: 95%;">
+                <td>
+                    <div class="tags-table">
+                        <table class="data-table" bind="tagsTable"/>
+                    </div>
                 </td>
             </tr>
-            <tr bind="statisticsRow" />
+            <tr style="height: 5%;">
+                <td>
+                    <div class="select-unselect-all">
+                        <table class="data-table" bind="selectUnselectAllTable" style="text-align: center;">
+                            <tr class="odd">
+                                <td width="100%">
+                                    <button class="button" bind="selectAllButton"></button>
+                                    <button class="button" bind="deselectAllButton"></button>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div bind="controlPanel" class="default-importing-parsing-control-panel osm-parsing-options ">
+        <table>
+            <tr>
+                <td>
+                    <div class="grid-layout layout-tightest">
+                        <table>
+                            <tbody>
+                            <tr>
+                                <td colspan="2">
+                                    <strong bind="includeLabel"/>
+                                </td>
+                            </tr>
+                            <table style="padding: 5px;">
+                                <tbody>
+                                <tr>
+                                    <td width="1%">
+                                        <input bind="pointsCheckbox" checked id="$points" type="checkbox"/>
+                                    </td>
+                                    <td width="99%">
+                                        <label bind="pointsLabel" for="$points"></label>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2">
+                                        <table style="margin-left: 5px;">
+                                            <tbody>
+                                            <tr>
+                                                <td colspan="2">
+                                                    <input bind="pointsLatLonCheckbox"
+                                                           id="pointsLatLonCheckbox"
+                                                           class="pointsCheckboxes"
+                                                           name="pointsLatLonCheckbox"
+                                                           type="checkbox"
+                                                           checked
+                                                    />
+                                                    <label for="pointsLatLonCheckbox"><span
+                                                            bind="pointsLatLonLabel"/></label>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td colspan="2">
+                                                    <input bind="pointsDelimitedCheckbox"
+                                                           id="pointsDelimitedCheckbox"
+                                                           name="pointsCheckbox"
+                                                           type="checkbox"
+                                                           class="pointsCheckboxes"/>
+                                                    <label for="pointsDelimitedCheckbox"><span
+                                                            bind="pointsDelimitedLabel"/></label>
+                                                    <input bind="pointsDelimitedSeparatorInput"
+                                                           id="pointsDelimitedSeparatorInput" size="5"
+                                                           type="text"/>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td colspan="2">
+                                                    <input bind="pointsWKTCheckbox"
+                                                           id="pointsWKTCheckbox"
+                                                           name="pointsCheckbox"
+                                                           class="pointsCheckboxes"
+                                                           type="checkbox"/>
+                                                    <label for="pointsWKTCheckbox"><span bind="pointsWKTLabel"/></label>
+                                                </td>
+                                            </tr>
+                                            </tbody>
+                                        </table>
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <td width="1%">
+                                        <input bind="linesCheckbox" checked id="$lines" type="checkbox"/>
+                                    </td>
+                                    <td width="99%">
+                                        <label bind="linesLabel" for="$lines"></label>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td width="1%">
+                                        <input bind="polygonsCheckbox" checked id="$polygons" type="checkbox"/>
+                                    </td>
+                                    <td width="99%">
+                                        <label bind="polygonsLabel" for="$polygons"></label>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td width="1%">
+                                        <input bind="multiPolygonsCheckbox" checked id="$multiPolygons"
+                                               type="checkbox"/>
+                                    </td>
+                                    <td width="99%">
+                                        <label bind="multiPolygonsLabel" for="$multiPolygons"></label>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                            </tbody>
+                        </table>
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="statistics-container" bind="statisticsContainer">
+        <table>
+            <tr bind="statisticsRow" style="text-align: center;"/>
         </table>
     </div>
 </div>
+
 
 <div bind="progressPanel" class="gdata-importing-progress-data-panel">
     <img src="images/large-spinner.gif"/> <span bind="loadingMessage"></span>

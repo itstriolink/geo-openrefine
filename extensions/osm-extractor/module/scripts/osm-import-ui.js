@@ -35,7 +35,7 @@ const OSM_ELEMENTS = {
 
 let _response = {};
 
-Refine.OSMImportUI = function(controller) {
+Refine.OSMImportUI = function (controller) {
     this._controller = controller;
 }
 
@@ -61,10 +61,6 @@ Refine.OSMImportUI.prototype.attachUI = function (body) {
     self._elmts.nextButton.click(function (_) {
         var overpassQuery = self._elmts.rawQueryInput[0] && self._elmts.rawQueryInput[0].value;
         var overpassAPI = $("#selectInstance").val();
-
-        if(!overpassQuery) {
-            return window.alert($.i18n('osm-extractor/alert-empty-query'));
-        }
 
         self._controller.startImportingData(overpassQuery, overpassAPI);
     });
@@ -137,6 +133,6 @@ Refine.OSMImportUI.prototype._createAndPopulateSettingsTab = function () {
         }
     );
 };
-Refine.OSMImportUI.prototype.focus = function() {
+Refine.OSMImportUI.prototype.focus = function () {
 };
 
