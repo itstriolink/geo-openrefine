@@ -58,36 +58,36 @@ function registerControllers() {
 
 function init() {
 
-  Packages.java.lang.System.out.println("Initializing OSM extension...");
-  Packages.java.lang.System.out.println(module.getMountPoint());
+    Packages.java.lang.System.out.println("Initializing OSM extension...");
+    Packages.java.lang.System.out.println(module.getMountPoint());
 
-  // Script files to inject into /project page
-  ClientSideResourceManager.addPaths(
-      "project/scripts",
-      module,
-      [
-        "scripts/index.js",
-        "scripts/dialog.js"
-      ]
-  );
+    // Script files to inject into /project page
+    ClientSideResourceManager.addPaths(
+        "project/scripts",
+        module,
+        [
+            "scripts/index.js",
+            "scripts/dialog.js"
+        ]
+    );
 
-  ClientSideResourceManager.addPaths(
-      "index/scripts",
-      module,
-      [
-          "scripts/index.js",
-          "scripts/osm-import-ui.js"
-      ]
-  )
+    ClientSideResourceManager.addPaths(
+        "index/scripts",
+        module,
+        [
+            "scripts/index.js",
+            "scripts/osm-import-ui.js"
+        ]
+    )
 
-  // Style files to inject into /project page
-  ClientSideResourceManager.addPaths(
-      "project/styles",
-      module,
-      [
-        "styles/dialog.less"
-      ]
-  );
+    // Style files to inject into /project page
+    ClientSideResourceManager.addPaths(
+        "project/styles",
+        module,
+        [
+            "styles/dialog.less"
+        ]
+    );
 
     ClientSideResourceManager.addPaths(
         "index/styles",
@@ -97,32 +97,32 @@ function init() {
         ]
     );
 
-  registerCommands();
-  registerControllers();
-  //registerExporters();
+    registerCommands();
+    registerControllers();
+    //registerExporters();
 }
 
 /*
  * Function invoked to handle each request in a custom way.
  */
 function process(path, request, response) {
-  // Analyze path and handle this request yourself.
+    // Analyze path and handle this request yourself.
 
-  if (path == "/" || path == "") {
-    const numberA = 10;
-    const numberB = 7;
-    const context = {};
-    // here's how to pass things into the .vt templates
-    context.someList = ["Superior","Michigan","Huron","Erie","Ontario"];
-    context.someString = "foofoo";
-    context.someNumber1 = numberA;
-    context.someNumber2 = numberB;
+    if (path == "/" || path == "") {
+        const numberA = 10;
+        const numberB = 7;
+        const context = {};
+        // here's how to pass things into the .vt templates
+        context.someList = ["Superior", "Michigan", "Huron", "Erie", "Ontario"];
+        context.someString = "foofoo";
+        context.someNumber1 = numberA;
+        context.someNumber2 = numberB;
 
 
-    send(request, response, "index.vt", context);
-  }
+        send(request, response, "index.vt", context);
+    }
 }
 
 function send(request, response, template, context) {
-  butterfly.sendTextFromTemplate(request, response, context, template, encoding, html);
+    butterfly.sendTextFromTemplate(request, response, context, template, encoding, html);
 }
