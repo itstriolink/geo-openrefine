@@ -46,10 +46,10 @@ public class ExportGeoJSONCommand extends Command{
             String preview = params.getProperty("preview");
             if (!"true".equals(preview)) {
                 String path = request.getPathInfo();
-                String filename = path.substring(path.lastIndexOf('/') + 1);
+                String fileName = path.substring(path.lastIndexOf('/') + 1);
                 PercentEscaper escaper = new PercentEscaper("", false);
-                filename = escaper.escape(filename);
-                response.setHeader("Content-Disposition", "attachment; filename=" +filename+"; filename*=utf-8' '" + filename);
+                fileName = escaper.escape(fileName);
+                response.setHeader("Content-Disposition", "attachment; filename=" +fileName+"; filename*=utf-8' '" + fileName);
             }
 
             if (exporter instanceof WriterExporter) {

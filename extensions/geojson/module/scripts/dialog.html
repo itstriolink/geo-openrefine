@@ -8,7 +8,7 @@
                         <tr>
                             <th>
                                 <label for="enterFileName" bind="enterFileName"/>
-                                <input id="enterFileName" bind="fileNameInput" type="text"/>
+                                <input id="enterFileName" bind="fileNameInput" type="text" size="50"/>
                             </th>
                         </tr>
                         <tr>
@@ -17,20 +17,31 @@
                             </td>
                         </tr>
                         <tr>
-                            <td bind="selectCoordinateCols"/>
+                            <td bind="selectGeometryCols"/>
                             <td bind="selectProps"/>
                         </tr>
                         <tr>
                             <td width="60%">
                                 <div class="geojson-exporter-columns">
-                                    <table>
+                                    <table style="width: 100%">
                                         <tbody>
                                         <tr>
-                                            <td width="50%" id="select-latitude-column">
-                                                <label for="selectLatitude" bind="selectLat" width="100%"/>
+                                            <td style="width: 33%;">
+                                                <label bind="selectLat" width="100%"/>
                                             </td>
-                                            <td width="50%" id="select-longitude-column">
-                                                <label for="selectLongitude" bind="selectLon" width="100%"/>
+                                            <td style="width: 33%;">
+                                                <label bind="selectLon" width="100%"/>
+                                            </td>
+                                            <td style="width: 33%;">
+                                                <label bind="selectWKT" width="100%"/>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td id="select-latitude-column">
+                                            </td>
+                                            <td id="select-longitude-column">
+                                            </td>
+                                            <td id="select-wkt-column">
                                             </td>
                                         </tr>
                                         </tbody>

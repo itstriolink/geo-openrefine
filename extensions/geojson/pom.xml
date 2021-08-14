@@ -104,16 +104,16 @@
   </build>
 
   <dependencies>
+    <dependency>
+      <groupId>org.locationtech.jts</groupId>
+      <artifactId>jts-core</artifactId>
+      <version>1.18.0</version>
+    </dependency>
      <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>main</artifactId>
       <version>${project.version}</version>
       <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>de.grundid.opendatalab</groupId>
-      <artifactId>geojson-jackson</artifactId>
-      <version>1.14</version>
     </dependency>
     <dependency>
       <groupId>javax.servlet</groupId>
@@ -122,11 +122,11 @@
       <scope>provided</scope>
     </dependency>
 
-<!--    <dependency>-->
-<!--      <groupId>de.topobyte</groupId>-->
-<!--      <artifactId>osm4j-core</artifactId>-->
-<!--      <version>1.2.0</version>-->
-<!--    </dependency>-->
+    <dependency>
+      <groupId>org.wololo</groupId>
+      <artifactId>jts2geojson</artifactId>
+      <version>0.16.1</version>
+    </dependency>
 
     <dependency>
       <groupId>org.testng</groupId>
