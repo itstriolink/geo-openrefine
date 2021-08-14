@@ -6,9 +6,9 @@
 *#
 
 #macro( makeAList $list )
-  <ul>
+<ul>
     #foreach($item in $list)
-      <li>$item</li>
+        <li>$item</li>
     #end
-  </ul>
+</ul>
 #end

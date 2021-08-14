@@ -16,9 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wololo.geojson.Feature;
 import org.wololo.geojson.FeatureCollection;
-import org.wololo.geojson.GeoJSON;
 import org.wololo.geojson.Point;
-import org.wololo.jts2geojson.GeoJSONReader;
 import org.wololo.jts2geojson.GeoJSONWriter;
 
 import java.io.IOException;
@@ -28,7 +26,8 @@ import java.util.*;
 
 public class GeoJSONExporter implements WriterExporter {
     final static Logger logger = LoggerFactory.getLogger("GeoJSONExporter");
-
+    private final WKTReader wktReader;
+    private final double[] emptyLatLon = new double[]{0.0, 0.0};
     GeoJSONWriter geoJSONWriter;
     ArrayList<Feature> features;
     FeatureCollection featureCollection;
@@ -36,9 +35,6 @@ public class GeoJSONExporter implements WriterExporter {
     String latitudeColumn = "";
     String longitudeColumn = "";
     String wktColumn = "";
-    boolean includeEmptyCoordinates = false;
-    private final WKTReader wktReader;
-    private double[] emptyLatLon = new double[]{0.0, 0.0};
 
     public GeoJSONExporter() {
         wktReader = new WKTReader();
@@ -71,7 +67,6 @@ public class GeoJSONExporter implements WriterExporter {
                 latitudeColumn = JSONUtilities.getString(options, "latitudeColumn", null);
                 longitudeColumn = JSONUtilities.getString(options, "longitudeColumn", null);
                 wktColumn = JSONUtilities.getString(options, "wktColumn", null);
-                includeEmptyCoordinates = JSONUtilities.getBoolean(options, "outputBlankRows", false);
             }
 
             @Override
@@ -92,15 +87,15 @@ public class GeoJSONExporter implements WriterExporter {
                 Geometry jtsGeometry = null;
                 Map<String, Object> properties = new HashMap<String, Object>();
                 for (CellData cellData : cells) {
-                    if (includeEmptyCoordinates || (cellData != null && cellData.text != null && cellData.columnName != null)) {
-                        if (cellData != null && cellData.columnName.equals(latitudeColumn)) {
+                    if (cellData != null && cellData.text != null && cellData.columnName != null) {
+                        if (cellData.columnName.equals(latitudeColumn)) {
                             try {
                                 latitude = Double.parseDouble(cellData.text);
                                 latitude = Math.round(latitude * Constants.latLonFactor) / Constants.latLonFactor;
                             } catch (NumberFormatException nfe) {
                                 logger.error("The '" + cellData.text + "' value on the '" + cellData.columnName + "' column could not be parsed to a latitude coordinate.");
                             }
-                        } else if (cellData != null && cellData.columnName.equals(longitudeColumn)) {
+                        } else if (cellData.columnName.equals(longitudeColumn)) {
                             try {
                                 longitude = Double.parseDouble(cellData.text);
                                 longitude = Math.round(longitude * Constants.latLonFactor) / Constants.latLonFactor;
@@ -115,14 +110,13 @@ public class GeoJSONExporter implements WriterExporter {
                             }
                         } else if (cellData != null && propertyColumns.contains(cellData.columnName)) {
                             properties.put(cellData.columnName, cellData.text);
+                        } else {
+
                         }
                     }
                 }
 
-                if (latitude == 0 && longitude == 0 && jtsGeometry != null && includeEmptyCoordinates) {
-                    Feature feature = new Feature(new Point(emptyLatLon), properties);
-                    features.add(feature);
-                } else if (latitude > 0 && longitude > 0) {
+                if (latitude > 0 && longitude > 0) {
                     Feature feature = new Feature(new Point(new double[]{latitude, longitude}), properties);
                     features.add(feature);
                 } else if (jtsGeometry != null) {

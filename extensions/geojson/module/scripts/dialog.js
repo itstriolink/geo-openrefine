@@ -54,7 +54,6 @@ GeoJSONExporterDialog.prototype._createDialog = function () {
     this._elmts.exportButton.html($.i18n('geojson/export-button'));
     this._elmts.cancelButton.html($.i18n('core-buttons/cancel'));
 
-    this._elmts.outputEmptyRows.html($.i18n('geojson/output-empty-rows'));
     this._elmts.fileNameInput.val(theProject.metadata.name.replace(/\W/g, ' ').replace(/\s+/g, '_'));
     self._generateSelectElements();
 
@@ -63,7 +62,7 @@ GeoJSONExporterDialog.prototype._createDialog = function () {
         var column = theProject.columnModel.columns[i];
         var name = column.name;
         var selectValues = [];
-        $("select").each(function(i, v) {
+        $("select").each(function (i, v) {
             var value = $(v);
             selectValues.push(value.val());
         });
@@ -163,7 +162,7 @@ GeoJSONExporterDialog.prototype._getOptionCode = function () {
         extension: 'geojson',
         encoding: 'UTF-8',
         outputColumnHeaders: false,
-        outputBlankRows: this._elmts.outputEmptyRowsCheckbox[0].checked,
+        outputBlankRows: false,
         latitudeColumn: $("select#selectLatitude").val(),
         longitudeColumn: $("select#selectLongitude").val(),
         wktColumn: $("select#selectWKT").val(),
@@ -199,7 +198,7 @@ GeoJSONExporterDialog.prototype._generateSelectElements = function () {
         debugger;
         var value = this.value;
         $('.geojson-exporter-dialog-row[column="' + value + '"]').remove();
-        if(latitudeSel.val() != previous && longitudeSel.val() != previous && wktSel.val() != previous){
+        if (latitudeSel.val() != previous && longitudeSel.val() != previous && wktSel.val() != previous) {
             var div = $('<div>')
                 .addClass("geojson-exporter-dialog-row")
                 .attr("column", previous)

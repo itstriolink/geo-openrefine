@@ -5,7 +5,10 @@ import com.google.refine.ProjectManager;
 import com.google.refine.browsing.Engine;
 import com.google.refine.commands.Command;
 import com.google.refine.commands.project.ExportRowsCommand;
-import com.google.refine.exporters.*;
+import com.google.refine.exporters.Exporter;
+import com.google.refine.exporters.ExporterRegistry;
+import com.google.refine.exporters.StreamExporter;
+import com.google.refine.exporters.WriterExporter;
 import com.google.refine.exporters.sql.SqlExporterException;
 import com.google.refine.geojson.exporters.GeoJSONExporter;
 import com.google.refine.model.Project;
@@ -20,7 +23,7 @@ import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.util.Properties;
 
-public class ExportGeoJSONCommand extends Command{
+public class ExportGeoJSONCommand extends Command {
     @Override
     public void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -49,7 +52,7 @@ public class ExportGeoJSONCommand extends Command{
                 String fileName = path.substring(path.lastIndexOf('/') + 1);
                 PercentEscaper escaper = new PercentEscaper("", false);
                 fileName = escaper.escape(fileName);
-                response.setHeader("Content-Disposition", "attachment; filename=" +fileName+"; filename*=utf-8' '" + fileName);
+                response.setHeader("Content-Disposition", "attachment; filename=" + fileName + "; filename*=utf-8' '" + fileName);
             }
 
             if (exporter instanceof WriterExporter) {
@@ -62,8 +65,7 @@ public class ExportGeoJSONCommand extends Command{
 
                 ((WriterExporter) exporter).export(project, params, engine, writer);
                 writer.close();
-            }
-            else if (exporter instanceof StreamExporter) {
+            } else if (exporter instanceof StreamExporter) {
                 response.setCharacterEncoding("UTF-8");
 
                 OutputStream stream = response.getOutputStream();
