@@ -1,10 +1,11 @@
 package com.google.refine.geojson;
-import static org.testng.Assert.assertTrue;
-import static org.testng.Assert.assertFalse;
 
 import com.google.refine.geojson.util.Constants;
 import org.testng.annotations.Test;
 import org.testng.asserts.SoftAssert;
+
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;
 
 public class RegExTest {
     @Test
@@ -17,11 +18,17 @@ public class RegExTest {
     }
 
     @Test
-    public void testLongitudeValueTrue() { assertTrue("8.2403654".matches(Constants.RegEx.longitudeValue)); }
+    public void testLongitudeValueTrue() {
+        assertTrue("8.2403654".matches(Constants.RegEx.longitudeValue));
+    }
 
     @Test
-    public void testLatitudeValueFalse() { assertFalse("foo".matches(Constants.RegEx.latitudeValue)); }
+    public void testLatitudeValueFalse() {
+        assertFalse("foo".matches(Constants.RegEx.latitudeValue));
+    }
 
     @Test
-    public void testLongitudeValueFalse() { assertFalse("bar".matches(Constants.RegEx.longitudeValue)); }
+    public void testLongitudeValueFalse() {
+        assertFalse("bar".matches(Constants.RegEx.longitudeValue));
+    }
 }

@@ -54,6 +54,10 @@ public class GeoJSONExporter implements WriterExporter {
         TabularSerializer serializer = new TabularSerializer() {
             @Override
             public void startFile(JsonNode options) {
+                latitudeColumn = JSONUtilities.getString(options, "latitudeColumn", null);
+                longitudeColumn = JSONUtilities.getString(options, "longitudeColumn", null);
+                wktColumn = JSONUtilities.getString(options, "wktColumn", null);
+
                 List<JsonNode> array = JSONUtilities.getArray(options, "propertyColumns");
                 for (JsonNode columnOptions : array) {
                     if (columnOptions != null) {
@@ -63,10 +67,6 @@ public class GeoJSONExporter implements WriterExporter {
                         }
                     }
                 }
-
-                latitudeColumn = JSONUtilities.getString(options, "latitudeColumn", null);
-                longitudeColumn = JSONUtilities.getString(options, "longitudeColumn", null);
-                wktColumn = JSONUtilities.getString(options, "wktColumn", null);
             }
 
             @Override
@@ -76,7 +76,7 @@ public class GeoJSONExporter implements WriterExporter {
                     writer.write(new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(featureCollection));
                 } catch (IOException e) {
                     e.printStackTrace();
-                    logger.error("GeoJSONExporter::Export::Exception::{}", e);
+                    logger.error("GeoJSONExporter::Export::EndFile::Exception::{}", e);
                 }
             }
 
@@ -85,7 +85,8 @@ public class GeoJSONExporter implements WriterExporter {
                 double latitude = 0.0d;
                 double longitude = 0.0d;
                 Geometry jtsGeometry = null;
-                Map<String, Object> properties = new HashMap<String, Object>();
+                Map<String, Object> properties = new HashMap<>();
+
                 for (CellData cellData : cells) {
                     if (cellData != null && cellData.text != null && cellData.columnName != null) {
                         if (cellData.columnName.equals(latitudeColumn)) {
@@ -102,16 +103,16 @@ public class GeoJSONExporter implements WriterExporter {
                             } catch (NumberFormatException nfe) {
                                 logger.error("The '" + cellData.text + "' value on the '" + cellData.columnName + "' column could not be parsed to a longitude coordinate.");
                             }
-                        } else if (cellData != null && cellData.columnName.equals(wktColumn)) {
+                        } else if (cellData.columnName.equals(wktColumn)) {
                             try {
                                 jtsGeometry = wktReader.read(cellData.text);
                             } catch (ParseException e) {
                                 e.printStackTrace();
+                                logger.error("GeoJSONExporter::Export::AddRow::Exception::{}", e);
                             }
-                        } else if (cellData != null && propertyColumns.contains(cellData.columnName)) {
+                        } else if (propertyColumns.contains(cellData.columnName)) {
                             properties.put(cellData.columnName, cellData.text);
                         } else {
-
                         }
                     }
                 }
@@ -122,6 +123,7 @@ public class GeoJSONExporter implements WriterExporter {
                 } else if (jtsGeometry != null) {
                     org.wololo.geojson.Geometry geometry = geoJSONWriter.write(jtsGeometry);
                     features.add(new Feature(geometry, properties));
+                } else {
                 }
             }
         };
