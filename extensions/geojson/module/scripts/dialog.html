@@ -1,14 +1,14 @@
 <div class="dialog-frame" style="min-width: 600px;">
-    <div class="dialog-header" bind="dialogHeader"></div>
-    <div class="dialog-body" bind="dialogBody">
+    <div bind="dialogHeader" class="dialog-header"></div>
+    <div bind="dialogBody" class="dialog-body">
         <div class="refine-tabs ui-tabs">
             <div class="ui-tabs-panel ui-corner-all ui-widget-content">
                 <div class="grid-layout grid-layout-for-ui layout-normal layout-full" style="padding: 5px;">
                     <table>
                         <tr>
                             <th>
-                                <label for="enterFileName" bind="enterFileName"/>
-                                <input id="enterFileName" bind="fileNameInput" type="text"/>
+                                <label bind="enterFileName" for="enterFileName"/>
+                                <input bind="fileNameInput" id="enterFileName" size="50" type="text"/>
                             </th>
                         </tr>
                         <tr>
@@ -17,20 +17,31 @@
                             </td>
                         </tr>
                         <tr>
-                            <td bind="selectCoordinateCols"/>
+                            <td bind="selectGeometryCols"/>
                             <td bind="selectProps"/>
                         </tr>
                         <tr>
                             <td width="60%">
                                 <div class="geojson-exporter-columns">
-                                    <table>
+                                    <table style="width: 100%">
                                         <tbody>
                                         <tr>
-                                            <td width="50%" id="select-latitude-column">
-                                                <label for="selectLatitude" bind="selectLat" width="100%"/>
+                                            <td style="width: 33%;">
+                                                <label bind="selectLat" width="100%"/>
                                             </td>
-                                            <td width="50%" id="select-longitude-column">
-                                                <label for="selectLongitude" bind="selectLon" width="100%"/>
+                                            <td style="width: 33%;">
+                                                <label bind="selectLon" width="100%"/>
+                                            </td>
+                                            <td style="width: 33%;">
+                                                <label bind="selectWKT" width="100%"/>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td id="select-latitude-column">
+                                            </td>
+                                            <td id="select-longitude-column">
+                                            </td>
+                                            <td id="select-wkt-column">
                                             </td>
                                         </tr>
                                         </tbody>
@@ -44,14 +55,8 @@
                         <tr>
                             <td/>
                             <td colspan="2">
-                                <button class="button" bind="selectAllButton"></button>
-                                <button class="button" bind="deselectAllButton"></button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td width="1%">
-                                <input type="checkbox" bind="outputEmptyRowsCheckbox" id="output-empty-rows"/>
-                                <label for="output-empty-rows" bind="outputEmptyRows"/>
+                                <button bind="selectAllButton" class="button"></button>
+                                <button bind="deselectAllButton" class="button"></button>
                             </td>
                         </tr>
                     </table>
@@ -59,13 +64,13 @@
             </div>
         </div>
     </div>
-    <div class="dialog-footer" bind="dialogFooter">
+    <div bind="dialogFooter" class="dialog-footer">
         <div class="grid-layout layout-tightest layout-full">
             <table>
                 <tr>
                     <td style="text-align: right;">
-                        <button class="button button-primary" bind="exportButton"></button>
-                        <button class="button" bind="cancelButton"></button>
+                        <button bind="exportButton" class="button button-primary"></button>
+                        <button bind="cancelButton" class="button"></button>
                     </td>
                 </tr>
             </table>

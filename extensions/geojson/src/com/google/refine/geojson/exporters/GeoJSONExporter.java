@@ -9,28 +9,37 @@ import com.google.refine.exporters.WriterExporter;
 import com.google.refine.geojson.util.Constants;
 import com.google.refine.model.Project;
 import com.google.refine.util.JSONUtilities;
-import org.geojson.Feature;
-import org.geojson.FeatureCollection;
-import org.geojson.Point;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.io.ParseException;
+import org.locationtech.jts.io.WKTReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.wololo.geojson.Feature;
+import org.wololo.geojson.FeatureCollection;
+import org.wololo.geojson.Point;
+import org.wololo.jts2geojson.GeoJSONWriter;
 
 import java.io.IOException;
 import java.io.Writer;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 
 
 public class GeoJSONExporter implements WriterExporter {
     final static Logger logger = LoggerFactory.getLogger("GeoJSONExporter");
-
-    FeatureCollection featureCollection;
+    private final WKTReader wktReader;
+    private final double[] emptyLatLon = new double[]{0.0, 0.0};
+    GeoJSONWriter geoJSONWriter;
     ArrayList<Feature> features;
+    FeatureCollection featureCollection;
     List<String> propertyColumns;
     String latitudeColumn = "";
     String longitudeColumn = "";
-    boolean includeEmptyCoordinates = false;
+    String wktColumn = "";
+
+    public GeoJSONExporter() {
+        wktReader = new WKTReader();
+        geoJSONWriter = new GeoJSONWriter();
+    }
 
     @Override
     public String getContentType() {
@@ -39,13 +48,16 @@ public class GeoJSONExporter implements WriterExporter {
 
     @Override
     public void export(final Project project, Properties params, Engine engine, Writer writer) {
-        featureCollection = new FeatureCollection();
-        features = new ArrayList<>();
         propertyColumns = new ArrayList<>();
+        features = new ArrayList<>();
 
         TabularSerializer serializer = new TabularSerializer() {
             @Override
             public void startFile(JsonNode options) {
+                latitudeColumn = JSONUtilities.getString(options, "latitudeColumn", null);
+                longitudeColumn = JSONUtilities.getString(options, "longitudeColumn", null);
+                wktColumn = JSONUtilities.getString(options, "wktColumn", null);
+
                 List<JsonNode> array = JSONUtilities.getArray(options, "propertyColumns");
                 for (JsonNode columnOptions : array) {
                     if (columnOptions != null) {
@@ -55,19 +67,16 @@ public class GeoJSONExporter implements WriterExporter {
                         }
                     }
                 }
-
-                latitudeColumn = JSONUtilities.getString(options, "latitudeColumn", null);
-                longitudeColumn = JSONUtilities.getString(options, "longitudeColumn", null);
-                includeEmptyCoordinates = JSONUtilities.getBoolean(options, "outputBlankRows", false);
             }
 
             @Override
             public void endFile() {
+                FeatureCollection featureCollection = geoJSONWriter.write(features);
                 try {
-                    featureCollection.setFeatures(features);
                     writer.write(new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(featureCollection));
                 } catch (IOException e) {
-                    logger.error("GeoJSONExporter::Export::Exception::{}", e);
+                    e.printStackTrace();
+                    logger.error("GeoJSONExporter::Export::EndFile::Exception::{}", e);
                 }
             }
 
@@ -75,35 +84,46 @@ public class GeoJSONExporter implements WriterExporter {
             public void addRow(List<CellData> cells, boolean isHeader) {
                 double latitude = 0.0d;
                 double longitude = 0.0d;
-                Feature feature = new Feature();
+                Geometry jtsGeometry = null;
+                Map<String, Object> properties = new HashMap<>();
+
                 for (CellData cellData : cells) {
-                    if (includeEmptyCoordinates || (cellData != null && cellData.text != null && cellData.columnName != null)) {
-                        if (cellData != null && cellData.columnName.equals(latitudeColumn)) {
+                    if (cellData != null && cellData.text != null && cellData.columnName != null) {
+                        if (cellData.columnName.equals(latitudeColumn)) {
                             try {
                                 latitude = Double.parseDouble(cellData.text);
                                 latitude = Math.round(latitude * Constants.latLonFactor) / Constants.latLonFactor;
                             } catch (NumberFormatException nfe) {
-                                logger.error("The '" +cellData.text+ "' value on the '" +cellData.columnName+ "' column could not be parsed to a latitude coordinate.");
+                                logger.error("The '" + cellData.text + "' value on the '" + cellData.columnName + "' column could not be parsed to a latitude coordinate.");
                             }
-                        } else if (cellData != null && cellData.columnName.equals(longitudeColumn)) {
+                        } else if (cellData.columnName.equals(longitudeColumn)) {
                             try {
                                 longitude = Double.parseDouble(cellData.text);
                                 longitude = Math.round(longitude * Constants.latLonFactor) / Constants.latLonFactor;
                             } catch (NumberFormatException nfe) {
-                                logger.error("The '" +cellData.text+ "' value on the '" +cellData.columnName+ "' column could not be parsed to a longitude coordinate.");
+                                logger.error("The '" + cellData.text + "' value on the '" + cellData.columnName + "' column could not be parsed to a longitude coordinate.");
                             }
-                        } else if (cellData != null && propertyColumns.contains(cellData.columnName)) {
-                            feature.setProperty(cellData.columnName, cellData.text);
+                        } else if (cellData.columnName.equals(wktColumn)) {
+                            try {
+                                jtsGeometry = wktReader.read(cellData.text);
+                            } catch (ParseException e) {
+                                e.printStackTrace();
+                                logger.error("GeoJSONExporter::Export::AddRow::Exception::{}", e);
+                            }
+                        } else if (propertyColumns.contains(cellData.columnName)) {
+                            properties.put(cellData.columnName, cellData.text);
+                        } else {
                         }
                     }
                 }
 
-                if (latitude == 0 && longitude == 0 && includeEmptyCoordinates) {
-                    feature.setGeometry(new Point());
+                if (latitude > 0 && longitude > 0) {
+                    Feature feature = new Feature(new Point(new double[]{latitude, longitude}), properties);
                     features.add(feature);
-                } else if (latitude > 0 && longitude > 0) {
-                    feature.setGeometry(new Point(longitude, latitude));
-                    features.add(feature);
+                } else if (jtsGeometry != null) {
+                    org.wololo.geojson.Geometry geometry = geoJSONWriter.write(jtsGeometry);
+                    features.add(new Feature(geometry, properties));
+                } else {
                 }
             }
         };
