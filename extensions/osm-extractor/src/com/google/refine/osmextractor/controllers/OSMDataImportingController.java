@@ -29,12 +29,11 @@ import de.topobyte.osm4j.core.resolve.EntityFinder;
 import de.topobyte.osm4j.core.resolve.EntityFinders;
 import de.topobyte.osm4j.core.resolve.EntityNotFoundException;
 import de.topobyte.osm4j.core.resolve.EntityNotFoundStrategy;
+import de.topobyte.osm4j.geometry.GeometryUtil;
 import de.topobyte.osm4j.geometry.NodeBuilder;
 import de.topobyte.osm4j.xml.dynsax.OsmXmlReader;
 import org.apache.commons.lang.exception.ExceptionUtils;
-import org.locationtech.jts.geom.LineString;
-import org.locationtech.jts.geom.MultiPolygon;
-import org.locationtech.jts.geom.Point;
+import org.locationtech.jts.geom.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,11 +52,13 @@ public class OSMDataImportingController implements ImportingController {
     private static final Logger logger = LoggerFactory.getLogger("OSMDataImportingController");
     protected RefineServlet servlet;
     private OSMExtractor osmExtractor;
+    private GeometryFactory geometryFactory;
 
     @Override
     public void init(RefineServlet servlet) {
-        osmExtractor = new OSMExtractor();
+        this.osmExtractor = new OSMExtractor();
         this.servlet = servlet;
+        this.geometryFactory = new GeometryFactory();
     }
 
     @Override
@@ -99,7 +100,7 @@ public class OSMDataImportingController implements ImportingController {
             HttpUtilities.respond(response, "error", " \"[out:json]\" command is not allowed in the Overpass QL query.");
             return;
         }
-
+        osmExtractor = new OSMExtractor();
         osmExtractor.setOverpassQuery(overpassQuery);
         osmExtractor.setOverpassInstance(overpassInstance);
 
@@ -143,9 +144,17 @@ public class OSMDataImportingController implements ImportingController {
 
             for (OsmRelation relation : data.getRelations().valueCollection()) {
                 MultiPolygon area = osmExtractor.getPolygon(relation);
+                Collection<LineString> paths = osmExtractor.getLines(relation);
 
                 if (area != null && !area.isEmpty()) {
-                    osmExtractor.addPolygon(area, OsmModelUtil.getTagsAsMap(relation));
+                    osmExtractor.addMultiPolygon(area, OsmModelUtil.getTagsAsMap(relation));
+                } else {
+//                    osmExtractor.addMultiLineString(GeometryUtil.createMultiLineString(
+//                            osmExtractor.getLines(relation), geometryFactory
+//                    ), OsmModelUtil.getTagsAsMap(relation));
+                    for (LineString path : paths) {
+                        osmExtractor.addLineString(path, OsmModelUtil.getTagsAsMap(relation));
+                    }
                 }
 
                 try {
@@ -169,38 +178,37 @@ public class OSMDataImportingController implements ImportingController {
             wayFinder.findWayNodes(data.getWays().valueCollection(), wayNodes);
             for (OsmWay way : data.getWays().valueCollection()) {
                 boolean found = false;
-                if (relationWays.contains(way)) {
+                if (relationWays.contains(way) && way.getNumberOfTags() == 0) {
                     continue;
                 }
 
-                MultiPolygon area = osmExtractor.getPolygon(way);
-                if (area != null && !area.isEmpty()) {
-                    osmExtractor.addPolygon(area, OsmModelUtil.getTagsAsMap(way));
-                    found = true;
-                }
+                    MultiPolygon area = osmExtractor.getPolygon(way);
 
-                Collection<LineString> paths = osmExtractor.getLine(way);
+                    if (area != null && !area.isEmpty()) {
+                        osmExtractor.addMultiPolygon(area, OsmModelUtil.getTagsAsMap(way));
+                        found = true;
+                    }
 
                 if (!found) {
+                    Collection<LineString> paths = osmExtractor.getLine(way);
+
                     for (LineString path : paths) {
                         osmExtractor.addLineString(path, OsmModelUtil.getTagsAsMap(way));
                     }
                 }
 
-                if (way.getNumberOfTags() > 0) {
-                    for (int i = 0; i < way.getNumberOfTags(); i++) {
-                        OsmTag tag = way.getTag(i);
-                        if (!tagsMap.containsKey(tag.getKey())) {
-                            tagsMap.put(tag.getKey(), 1);
-                        } else {
-                            tagsMap.put(tag.getKey(), tagsMap.get(tag.getKey()) + 1);
-                        }
+                for (int i = 0; i < way.getNumberOfTags(); i++) {
+                    OsmTag tag = way.getTag(i);
+                    if (!tagsMap.containsKey(tag.getKey())) {
+                        tagsMap.put(tag.getKey(), 1);
+                    } else {
+                        tagsMap.put(tag.getKey(), tagsMap.get(tag.getKey()) + 1);
                     }
                 }
             }
 
             for (OsmNode node : data.getNodes().valueCollection()) {
-                if (!wayNodes.contains(node)) {
+                if (!wayNodes.contains(node) || node.getNumberOfTags() > 0) {
                     NodeBuilder nodeBuilder = new NodeBuilder();
                     osmExtractor.addPoint(nodeBuilder.build(node), OsmModelUtil.getTagsAsMap(node));
 
@@ -218,8 +226,8 @@ public class OSMDataImportingController implements ImportingController {
             Map<String, Integer> mainTagsMap = new HashMap<>();
             Map<String, Integer> otherTagsMap = new HashMap<>();
 
-            for(Map.Entry<String, Integer> tag: tagsMap.entrySet()) {
-                if(OSMTags.MAIN_TAGS.contains(tag.getKey())) {
+            for (Map.Entry<String, Integer> tag : tagsMap.entrySet()) {
+                if (OSMTags.MAIN_TAGS.contains(tag.getKey())) {
                     mainTagsMap.put(tag.getKey(), tag.getValue());
                 } else {
                     otherTagsMap.put(tag.getKey(), tag.getValue());
@@ -244,8 +252,8 @@ public class OSMDataImportingController implements ImportingController {
             }
 
             statsNode.put("points", osmExtractor.getPointsSize());
-            statsNode.put("lines", osmExtractor.getLineStringsSize());
-            statsNode.put("polygons", osmExtractor.getPolygonsSize());
+            statsNode.put("lines", osmExtractor.getLineStringsSize() + osmExtractor.getMultiLineStringsSize());
+            statsNode.put("polygons", osmExtractor.getMultiPolygonsSize());
 
             ObjectNode result = ParsingUtilities.mapper.createObjectNode();
 
@@ -285,7 +293,7 @@ public class OSMDataImportingController implements ImportingController {
         String pointsSeparator = importOptions.get("pointsSeparator").asText(", ");
         boolean pointsAsWKT = importOptions.get("pointsAsWKT").asBoolean(false);
         boolean includeLineStrings = importOptions.get("lines").asBoolean(false);
-        boolean includePolygons = importOptions.get("polygons").asBoolean(false);
+        boolean includeMultiLineStrings = importOptions.get("multiLines").asBoolean(false);
         boolean includeMultiPolygons = importOptions.get("multiPolygons").asBoolean(false);
 
         job.setState("creating-project");
@@ -297,17 +305,17 @@ public class OSMDataImportingController implements ImportingController {
             pm.setEncoding(JSONUtilities.getString(projectOptions, "encoding", "UTF-8"));
             pm.setDescription("OpenStreetMap data initially generated using Overpass API with the following query: " + osmExtractor.getOverpassQuery());
 
-            if ((includePoints && pointsAsWKT) || includeLineStrings || includePolygons || includeMultiPolygons) {
-                createColumn(project, Constants.Importing.wktColumnName, Constants.Importing.generatedColumnDescription);
+            if ((includePoints && pointsAsWKT) || includeLineStrings || includeMultiLineStrings || includeMultiPolygons) {
+                createColumn(project, Constants.Importing.WKT_COLUMN_NAME, Constants.Importing.GENERATED_COLUMN_DESCRIPTION);
 
                 if (includePoints) {
                     if (pointsAsLatLon) {
-                        createColumn(project, Constants.Importing.latitudeColumnName, Constants.Importing.generatedColumnDescription);
-                        createColumn(project, Constants.Importing.longitudeColumnName, Constants.Importing.generatedColumnDescription);
+                        createColumn(project, Constants.Importing.LATITUDE_COLUMN_NAME, Constants.Importing.GENERATED_COLUMN_DESCRIPTION);
+                        createColumn(project, Constants.Importing.LONGITUDE_COLUMN_NAME, Constants.Importing.GENERATED_COLUMN_DESCRIPTION);
                     }
 
                     if (pointsDelimited) {
-                        createColumn(project, Constants.Importing.pointDelimitedColumnName, Constants.Importing.generatedColumnDescription);
+                        createColumn(project, Constants.Importing.POINT_DELIMITED_COLUMN_NAME, Constants.Importing.GENERATED_COLUMN_DESCRIPTION);
                     }
                 }
             }
@@ -329,7 +337,8 @@ public class OSMDataImportingController implements ImportingController {
 
             Map<Point, Map<String, String>> points = osmExtractor.getPoints();
             Map<LineString, Map<String, String>> lineStrings = osmExtractor.getLineStrings();
-            Map<MultiPolygon, Map<String, String>> polygons = osmExtractor.getMultiPolygons();
+            Map<MultiLineString, Map<String, String>> multiLineStrings = osmExtractor.getMultiLineStrings();
+            Map<MultiPolygon, Map<String, String>> multiPolygons = osmExtractor.getMultiPolygons();
 
             int includeItemsCount = 0;
             if (includePoints) {
@@ -340,7 +349,7 @@ public class OSMDataImportingController implements ImportingController {
                 includeItemsCount++;
             }
 
-            if (includePolygons) {
+            if (includeMultiLineStrings) {
                 includeItemsCount++;
             }
 
@@ -360,13 +369,13 @@ public class OSMDataImportingController implements ImportingController {
 
                         String value;
 
-                        if (pointsAsLatLon && columnName.equals(Constants.Importing.latitudeColumnName)) {
+                        if (pointsAsLatLon && columnName.equals(Constants.Importing.LATITUDE_COLUMN_NAME)) {
                             value = String.valueOf(latitude);
-                        } else if (pointsAsLatLon && columnName.equals(Constants.Importing.longitudeColumnName)) {
+                        } else if (pointsAsLatLon && columnName.equals(Constants.Importing.LONGITUDE_COLUMN_NAME)) {
                             value = String.valueOf(longitude);
-                        } else if (pointsDelimited && columnName.equals(Constants.Importing.pointDelimitedColumnName)) {
+                        } else if (pointsDelimited && columnName.equals(Constants.Importing.POINT_DELIMITED_COLUMN_NAME)) {
                             value = String.format("%f%s%f", latitude, pointsSeparator, (longitude));
-                        } else if (pointsAsWKT && columnName.equals(Constants.Importing.wktColumnName)) {
+                        } else if (pointsAsWKT && columnName.equals(Constants.Importing.WKT_COLUMN_NAME)) {
                             value = osmExtractor.getWKTRepresentation(point);
                         } else if (originalTagName != null && currentTags.get(originalTagName) != null) {
                             value = currentTags.get(originalTagName);
@@ -397,7 +406,7 @@ public class OSMDataImportingController implements ImportingController {
 
                         String value;
 
-                        if (columnName.equals(Constants.Importing.wktColumnName)) {
+                        if (columnName.equals(Constants.Importing.WKT_COLUMN_NAME)) {
                             value = osmExtractor.getWKTRepresentation(lineString);
                         } else if (originalTagName != null && currentTags.get(originalTagName) != null) {
                             value = currentTags.get(originalTagName);
@@ -416,9 +425,41 @@ public class OSMDataImportingController implements ImportingController {
                 }
             }
 
-            if (includePolygons && polygons != null && polygons.size() > 0) {
+            if (includeMultiLineStrings && multiLineStrings != null && multiLineStrings.size() > 0) {
                 int index = 0;
-                for (Map.Entry<MultiPolygon, Map<String, String>> entry : polygons.entrySet()) {
+                for (Map.Entry<MultiLineString, Map<String, String>> entry : multiLineStrings.entrySet()) {
+                    MultiLineString multiLineString = entry.getKey();
+                    Row row = new Row(project.columnModel.getMaxCellIndex());
+                    Map<String, String> currentTags = entry.getValue();
+
+                    for (Column column : project.columnModel.columns) {
+                        String columnName = column.getName();
+                        String originalTagName = tagMappings.getOrDefault(columnName, null);
+
+                        String value;
+
+                        if (columnName.equals(Constants.Importing.WKT_COLUMN_NAME)) {
+                            value = osmExtractor.getWKTRepresentation(multiLineString);
+                        } else if (originalTagName != null && currentTags.get(originalTagName) != null) {
+                            value = currentTags.get(originalTagName);
+                        } else {
+                            value = null;
+                        }
+
+                        row.setCell(column.getCellIndex(), new Cell(value, null));
+                    }
+
+                    project.rows.add(row);
+
+                    job.setProgress(index * 100 / multiLineStrings.size(),
+                            "Parsed " + index + "/" + multiLineStrings.size() + " OpenStreetMap multilinestrings.");
+                    index++;
+                }
+            }
+
+            if (includeMultiPolygons && multiPolygons != null && multiPolygons.size() > 0) {
+                int index = 0;
+                for (Map.Entry<MultiPolygon, Map<String, String>> entry : multiPolygons.entrySet()) {
                     MultiPolygon polygon = entry.getKey();
                     Row row = new Row(project.columnModel.getMaxCellIndex());
                     Map<String, String> currentTags = entry.getValue();
@@ -429,7 +470,7 @@ public class OSMDataImportingController implements ImportingController {
 
                         String value;
 
-                        if (columnName.equals(Constants.Importing.wktColumnName)) {
+                        if (columnName.equals(Constants.Importing.WKT_COLUMN_NAME)) {
                             value = osmExtractor.getWKTRepresentation(polygon);
                         } else if (originalTagName != null && currentTags.get(originalTagName) != null) {
                             value = currentTags.get(originalTagName);
@@ -442,8 +483,8 @@ public class OSMDataImportingController implements ImportingController {
 
                     project.rows.add(row);
 
-                    job.setProgress(index * 100 / polygons.size(),
-                            "Parsed " + index + "/" + polygons.size() + " OpenStreetMap polygons.");
+                    job.setProgress(index * 100 / multiPolygons.size(),
+                            "Parsed " + index + "/" + multiPolygons.size() + " OpenStreetMap polygons.");
                     index++;
                 }
             }
@@ -475,7 +516,7 @@ public class OSMDataImportingController implements ImportingController {
             try {
                 Column column = new Column(project.columnModel.allocateNewCellIndex(), columnName);
 
-                if(columnDescription != null && !columnDescription.trim().isEmpty()) {
+                if (columnDescription != null && !columnDescription.trim().isEmpty()) {
                     column.setDescription(columnDescription);
                 }
 

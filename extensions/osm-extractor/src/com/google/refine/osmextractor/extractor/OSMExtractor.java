@@ -15,24 +15,23 @@ import java.io.IOException;
 import java.util.*;
 
 public class OSMExtractor {
-    private String overpassInstance;
-    private String overpassQuery;
-
     private final Map<Point, Map<String, String>> points;
     private final Map<LineString, Map<String, String>> lineStrings;
-    private final Map<Polygon, Map<String, String>> polygons;
+    private final Map<MultiLineString, Map<String, String>> multiLineStrings;
     private final Map<MultiPolygon, Map<String, String>> multiPolygons;
     private final GeometryBuilder geometryBuilder;
     private final WayBuilder wayBuilder;
     private final RegionBuilder regionBuilder;
     private final WKTWriter wktWriter;
+    private String overpassInstance;
+    private String overpassQuery;
     private InMemoryMapDataSet data;
 
 
     public OSMExtractor() {
         this.points = new HashMap<>();
         this.lineStrings = new HashMap<>();
-        this.polygons = new HashMap<>();
+        this.multiLineStrings = new HashMap<>();
         this.multiPolygons = new HashMap<>();
 
         this.geometryBuilder = new GeometryBuilder();
@@ -66,6 +65,10 @@ public class OSMExtractor {
         return lineStrings;
     }
 
+    public Map<MultiLineString, Map<String, String>> getMultiLineStrings() {
+        return multiLineStrings;
+    }
+
 
     public Map<MultiPolygon, Map<String, String>> getMultiPolygons() {
         return multiPolygons;
@@ -79,11 +82,11 @@ public class OSMExtractor {
         this.lineStrings.put(lineString, tags);
     }
 
-    public void addPolygon(Polygon polygon, Map<String, String> tags) {
-        this.polygons.put(polygon, tags);
+    public void addMultiLineString(MultiLineString multiLineString, Map<String, String> tags) {
+        this.multiLineStrings.put(multiLineString, tags);
     }
 
-    public void addPolygon(MultiPolygon polygon, Map<String, String> tags) {
+    public void addMultiPolygon(MultiPolygon polygon, Map<String, String> tags) {
         this.multiPolygons.put(polygon, tags);
     }
 
@@ -99,7 +102,11 @@ public class OSMExtractor {
         return this.lineStrings.size();
     }
 
-    public int getPolygonsSize() {
+    public int getMultiLineStringsSize() {
+        return this.multiLineStrings.size();
+    }
+
+    public int getMultiPolygonsSize() {
         return this.multiPolygons.size();
     }
 
@@ -112,14 +119,24 @@ public class OSMExtractor {
         try {
             WayBuilderResult lines = wayBuilder.build(way, data);
             results.addAll(lines.getLineStrings());
-            if (lines.getLinearRing() != null && !lines.getLinearRing().isEmpty()) {
-                results.add(lines.getLinearRing());
-            }
         } catch (EntityNotFoundException e) {
             // ignore
         }
         return results;
     }
+
+    public List<LineString> getLines(OsmRelation relation) {
+        List<LineString> results = new ArrayList<>();
+
+        try {
+            RegionBuilderResult lines = regionBuilder.build(relation, data);
+            results.addAll(lines.getLineStrings());
+        } catch (EntityNotFoundException e) {
+            // ignore
+        }
+        return results;
+    }
+
 
     public MultiPolygon getPolygon(OsmWay way) {
         try {

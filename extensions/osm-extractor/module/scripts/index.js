@@ -73,7 +73,7 @@ Refine.OSMImportingController._overpassInstance = null;
 // });
 
 Refine.CreateProjectUI.controllers.push(Refine.OSMImportingController);
-
+debugger;
 Refine.OSMImportingController.prototype.startImportingData = function (overpassQuery, overpassInstance) {
     var self = this;
     self._overpassQuery = overpassQuery;
@@ -132,7 +132,7 @@ Refine.OSMImportingController.prototype._showParsingPanel = function () {
     this._parsingPanelElmts.pointsDelimitedLabel.html($.i18n('osm-extractor/points-delimited'));
     this._parsingPanelElmts.pointsWKTLabel.html($.i18n('osm-extractor/points-wkt'));
     this._parsingPanelElmts.linesLabel.html($.i18n('osm-extractor/lines-wkt'));
-    this._parsingPanelElmts.polygonsLabel.html($.i18n('osm-extractor/polygons-wkt'));
+    this._parsingPanelElmts.multiLinesLabel.html($.i18n('osm-extractor/multi-lines-wkt'));
     this._parsingPanelElmts.multiPolygonsLabel.html($.i18n('osm-extractor/multi-polygons-wkt'));
 
     this._parsingPanelElmts.loadingMessage.html($.i18n('osm-extractor/loading-message'));
@@ -201,7 +201,7 @@ Refine.OSMImportingController.prototype._showParsingPanel = function () {
         self._createProject();
     });
 
-    this._parsingPanelElmts.projectNameInput[0].value = "OpenstreetMap (from Overpass) project";
+    this._parsingPanelElmts.projectNameInput[0].value = "OpenstreetMap (Overpass) project";
 
     this._createProjectUI.showCustomPanel(this._parsingPanel);
     this._updatePreview();
@@ -356,7 +356,7 @@ Refine.OSMImportingController.prototype._createProject = function () {
         "pointsSeparator": self._parsingPanelElmts.pointsDelimitedSeparatorInput.val(),
         "pointsAsWKT": self._parsingPanelElmts.pointsWKTCheckbox[0].checked,
         "lines": self._parsingPanelElmts.linesCheckbox[0].checked,
-        "polygons": self._parsingPanelElmts.polygonsCheckbox[0].checked,
+        "multiLines": self._parsingPanelElmts.multiLinesCheckbox[0].checked,
         "multiPolygons": self._parsingPanelElmts.multiPolygonsCheckbox[0].checked
     }
 
