@@ -117,8 +117,8 @@ public class GeoJSONExporter implements WriterExporter {
                     }
                 }
 
-                if (latitude > 0 && longitude > 0) {
-                    Feature feature = new Feature(new Point(new double[]{latitude, longitude}), properties);
+                if (longitude > 0.0d && latitude > 0.0d) {
+                    Feature feature = new Feature(new Point(new double[]{longitude, latitude}), properties);
                     features.add(feature);
                 } else if (jtsGeometry != null) {
                     org.wololo.geojson.Geometry geometry = geoJSONWriter.write(jtsGeometry);
