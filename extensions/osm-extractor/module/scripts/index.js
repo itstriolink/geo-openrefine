@@ -60,17 +60,6 @@ Refine.OSMImportingController = function (createProjectUI) {
 
 Refine.OSMImportingController._overpassQuery = null;
 Refine.OSMImportingController._overpassInstance = null;
-// DataTableColumnHeaderUI.extendMenu(function(column, columnHeaderUI, menu) {
-//     MenuSystem.insertAfter(menu, ["core/edit-column", "core/add-column-by-reconciliation"], [
-//         {
-//             "id": "osm-extractor/osm-extractor",
-//             "label": $.i18n('osm-extractor/add-columns-from-osm'),
-//             "click": function () {
-//                 new OSMExtractorDialog();
-//             }
-//         },
-//     ]);
-// });
 
 Refine.CreateProjectUI.controllers.push(Refine.OSMImportingController);
 debugger;
@@ -242,21 +231,25 @@ Refine.OSMImportingController.prototype._updatePreview = function () {
                         var tagsHeaderCell = $('<td>')
                             .addClass("column-header")
                             .addClass("text-center")
-                            .attr("colspan", 3)
+                            .attr("colspan", 4)
                             .html("Tags")
                             .appendTo(tagsHeaderRow);
+
                         var tagsHeaderCells = $('<tr>').appendTo(self._parsingPanelElmts.tagsTable);
                         var indexHeaderCell = $('<td>').addClass("column-header").html(" ").appendTo(tagsHeaderCells);
-                        var tagHeaderCell = $('<td>').addClass("column-header").html("Tag name").appendTo(tagsHeaderCells);
+                        var tagHeaderCell = $('<td>').addClass("column-header").html("Name").appendTo(tagsHeaderCells);
                         var newColumnHeaderCell = $('<td>').addClass("column-header").html("Column name").appendTo(tagsHeaderCells);
+                        var descriptionHeaderCell = $('<td>').addClass("column-header").html("Type").appendTo(tagsHeaderCells);
                         for (var i = 0; i < tags.length; i++) {
                             var column = tags[i];
+                            var name = column.name;
+                            var type = column.type;
 
                             var row = $('<tr>')
                                 .addClass("osm-extractor-dialog-row")
                                 .addClass("tagRow")
                                 .addClass(i % 2 == 0 ? "odd" : "even")
-                                .attr("column", column)
+                                .attr("column", name)
                                 .attr("rowIndex", i)
                                 .appendTo(self._parsingPanelElmts.tagsTable);
 
@@ -264,7 +257,7 @@ Refine.OSMImportingController.prototype._updatePreview = function () {
                                 .attr("width", "10%")
                                 .appendTo(row);
 
-                            var tagNameCell = $('<td>').attr("width", "45%").appendTo(row);
+                            var tagNameCell = $('<td>').attr("width", "30%").appendTo(row);
                             var tagNameDiv = $('<div>').addClass("data-table-cell-content").appendTo(tagNameCell);
                             $('<div>')
                                 .text((i + 1) + ".")
@@ -280,13 +273,13 @@ Refine.OSMImportingController.prototype._updatePreview = function () {
                                 .appendTo(tagNameDiv);
 
                             $('<label>')
-                                .text(column)
+                                .text(name)
                                 .attr("for", "tagCheckbox-" + i)
                                 .attr("class", "osmTagName")
                                 .attr("rowIndex", i)
                                 .appendTo(tagNameDiv);
 
-                            var newColumnNameCell = $('<td>').attr("width", "45%").appendTo(row);
+                            var newColumnNameCell = $('<td>').attr("width", "30%").appendTo(row);
                             var newColumnNameDiv = $('<div>').addClass("data-table-cell-content").appendTo(newColumnNameCell);
 
                             $('<input>')
@@ -294,8 +287,16 @@ Refine.OSMImportingController.prototype._updatePreview = function () {
                                 .attr("class", "newColumnName")
                                 .attr("disabled", i > 0 ? true : false)
                                 .attr("rowIndex", i)
-                                .val(column)
+                                .val(name)
                                 .appendTo(newColumnNameDiv);
+
+                            var descriptionCell = $('<td>').attr("width", "30%").appendTo(row);
+                            var descriptionDiv = $('<div>').addClass("data-table-cell-content").appendTo(descriptionCell);
+
+                            $('<div>')
+                                .text(type)
+                                .attr("rowIndex", i)
+                                .appendTo(descriptionCell);
                         }
                     }
 
@@ -355,8 +356,8 @@ Refine.OSMImportingController.prototype._createProject = function () {
         "pointsDelimited": self._parsingPanelElmts.pointsDelimitedCheckbox[0].checked,
         "pointsSeparator": self._parsingPanelElmts.pointsDelimitedSeparatorInput.val(),
         "pointsAsWKT": self._parsingPanelElmts.pointsWKTCheckbox[0].checked,
-        "lines": self._parsingPanelElmts.linesCheckbox[0].checked,
-        "multiLines": self._parsingPanelElmts.multiLinesCheckbox[0].checked,
+        "lineStrings": self._parsingPanelElmts.linesCheckbox[0].checked,
+        "multiLineStrings": self._parsingPanelElmts.multiLinesCheckbox[0].checked,
         "multiPolygons": self._parsingPanelElmts.multiPolygonsCheckbox[0].checked
     }
 
