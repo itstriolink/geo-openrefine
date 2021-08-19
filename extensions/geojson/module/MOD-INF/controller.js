@@ -34,22 +34,23 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 var html = "text/html";
 var encoding = "UTF-8";
 var ClientSideResourceManager = Packages.com.google.refine.ClientSideResourceManager;
+var logger = Packages.org.slf4j.LoggerFactory.getLogger("geojson-extension");
 
 function registerExporters() {
-    Packages.java.lang.System.out.println("Registering the GeoJSON exporter...");
+    logger.trace("Registering the GeoJSON exporter...");
     var ExporterRegistry = Packages.com.google.refine.exporters.ExporterRegistry;
     var GeoJSONExporter = Packages.com.google.refine.geojson.exporters.GeoJSONExporter;
 
     ExporterRegistry.registerExporter("geojson", new GeoJSONExporter());
 
-    Packages.java.lang.System.out.println("GeoJSON exporter registered successfully.");
+    logger.trace("GeoJSON exporter registered successfully.");
 }
 
 function registerCommands() {
-    Packages.java.lang.System.out.println("Initializing GeoJSON commands...");
+    logger.trace("Initializing GeoJSON commands...");
     var RefineServlet = Packages.com.google.refine.RefineServlet;
     RefineServlet.registerCommand(module, "export-to-geojson", new Packages.com.google.refine.geojson.commands.ExportGeoJSONCommand());
-    Packages.java.lang.System.out.println("Finished initializing GeoJSON commands.");
+    logger.trace("Finished initializing GeoJSON commands.");
 }
 
 /*
@@ -57,10 +58,12 @@ function registerCommands() {
  */
 
 function init() {
-    Packages.java.lang.System.out.println("Initializing GeoJSON extension...");
-    Packages.java.lang.System.out.println(module.getMountPoint());
+    logger.trace("Initializing GeoJSON extension...");
+    logger.trace(module.getMountPoint());
 
-    // Script files to inject into /project page
+    registerCommands();
+    registerExporters();
+
     ClientSideResourceManager.addPaths(
         "project/scripts",
         module,
@@ -70,17 +73,14 @@ function init() {
         ]
     );
 
-    // Style files to inject into /project page
     ClientSideResourceManager.addPaths(
         "project/styles",
         module,
         [
+            "styles/theme.less",
             "styles/dialog.less"
         ]
     );
-
-    registerCommands();
-    registerExporters();
 }
 
 /*

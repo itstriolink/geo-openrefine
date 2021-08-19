@@ -194,11 +194,9 @@ GeoJSONExporterDialog.prototype._generateSelectElements = function () {
     $(latitudeSel).add(longitudeSel).add(wktSel).on("focus click", function () {
         previous = this.value;
     }).change(function () {
-        var current = $(this);
-        debugger;
         var value = this.value;
         $('.geojson-exporter-dialog-row[column="' + value + '"]').remove();
-        if (latitudeSel.val() != previous && longitudeSel.val() != previous && wktSel.val() != previous) {
+        if (previous && latitudeSel.val() != previous && longitudeSel.val() != previous && wktSel.val() != previous) {
             var div = $('<div>')
                 .addClass("geojson-exporter-dialog-row")
                 .attr("column", previous)
