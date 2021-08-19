@@ -18,12 +18,27 @@ public class Constants {
             }});
 
     public class Importing {
-        public static final String latitudeColumnName = "latitude";
-        public static final String longitudeColumnName = "longitude";
-        public static final String pointDelimitedColumnName = "point_delimited";
-        public static final String wktColumnName = "WKT";
-        public static final String generatedColumnDescription = "Column generated automatically by the OSM importer";
+        public static final String LATITUDE_COLUMN_NAME = "latitude";
+        public static final String LONGITUDE_COLUMN_NAME = "longitude";
+        public static final String POINT_DELIMITED_COLUMN_NAME = "point_delimited";
+        public static final String WKT_COLUMN_NAME = "WKT";
+        public static final String GENERATED_COLUMN_DESCRIPTION = "Column generated automatically by the OSM importer";
+
+        public static final String COMMENTED_METADATA_REGEX = "(\\/\\/)(.?)(out meta)";
+        public static final String COMMENTED_CENTER_REGEX = "(\\/\\/)(.?)(out)(.*)(center)";
+        public static final String CONTAINS_CENTER_REGEX = "(out)(.*)(center)";
     }
+
+    public static final List<String> METADATA_TAGS = Collections.unmodifiableList(
+            new ArrayList<String>() {{
+                add("@uid");
+                add("@version");
+                add("@timestamp");
+                add("@changeset");
+                add("@user");
+                add("@visible");
+            }}
+    );
 }
 
 

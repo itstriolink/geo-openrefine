@@ -4,38 +4,49 @@ import de.topobyte.osm4j.core.access.OsmInputException;
 import de.topobyte.osm4j.core.access.OsmReader;
 import de.topobyte.osm4j.core.dataset.InMemoryMapDataSet;
 import de.topobyte.osm4j.core.dataset.MapDataSetLoader;
+import de.topobyte.osm4j.core.model.iface.OsmMetadata;
 import de.topobyte.osm4j.core.model.iface.OsmRelation;
 import de.topobyte.osm4j.core.model.iface.OsmWay;
 import de.topobyte.osm4j.core.resolve.EntityNotFoundException;
-import de.topobyte.osm4j.geometry.*;
+import de.topobyte.osm4j.geometry.RegionBuilder;
+import de.topobyte.osm4j.geometry.RegionBuilderResult;
+import de.topobyte.osm4j.geometry.WayBuilder;
+import de.topobyte.osm4j.geometry.WayBuilderResult;
 import org.locationtech.jts.geom.*;
 import org.locationtech.jts.io.WKTWriter;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 public class OSMExtractor {
-    private String overpassInstance;
-    private String overpassQuery;
-
-    private final Map<Point, Map<String, String>> points;
-    private final Map<LineString, Map<String, String>> lineStrings;
-    private final Map<Polygon, Map<String, String>> polygons;
-    private final Map<MultiPolygon, Map<String, String>> multiPolygons;
-    private final GeometryBuilder geometryBuilder;
+    private final List<OSMElement> points;
+    private final List<OSMElement> lineStrings;
+    private final List<OSMElement> multiLineStrings;
+    private final List<OSMElement> multiPolygons;
+    private final GeometryFactory geometryFactory;
     private final WayBuilder wayBuilder;
     private final RegionBuilder regionBuilder;
     private final WKTWriter wktWriter;
+    private String overpassInstance;
+    private String overpassQuery;
+    private boolean includeMetadata;
+    private boolean isCenter;
     private InMemoryMapDataSet data;
 
 
     public OSMExtractor() {
-        this.points = new HashMap<>();
-        this.lineStrings = new HashMap<>();
-        this.polygons = new HashMap<>();
-        this.multiPolygons = new HashMap<>();
+        this.points = new ArrayList<>();
+        this.lineStrings = new ArrayList<>();
+        this.multiLineStrings = new ArrayList<>();
+        this.multiPolygons = new ArrayList<>();
 
-        this.geometryBuilder = new GeometryBuilder();
+        isCenter = false;
+        includeMetadata = false;
+
+        this.geometryFactory = new GeometryFactory();
         this.wayBuilder = new WayBuilder();
         this.regionBuilder = new RegionBuilder();
         this.wktWriter = new WKTWriter();
@@ -49,6 +60,22 @@ public class OSMExtractor {
         this.overpassInstance = overpassInstance;
     }
 
+    public boolean getIncludeMetadata() {
+        return includeMetadata;
+    }
+
+    public void setIncludeMetadata(boolean includeMetadata) {
+        this.includeMetadata = includeMetadata;
+    }
+
+    public boolean getIsCenter() {
+        return isCenter;
+    }
+
+    public void setIsCenter(boolean isCenter) {
+        this.isCenter = isCenter;
+    }
+
     public String getOverpassQuery() {
         return overpassQuery;
     }
@@ -57,34 +84,37 @@ public class OSMExtractor {
         this.overpassQuery = overpassQuery;
     }
 
-    public Map<Point, Map<String, String>> getPoints() {
+    public List<OSMElement> getPoints() {
         return points;
     }
 
 
-    public Map<LineString, Map<String, String>> getLineStrings() {
+    public List<OSMElement> getLineStrings() {
         return lineStrings;
     }
 
+    public List<OSMElement> getMultiLineStrings() {
+        return lineStrings;
+    }
 
-    public Map<MultiPolygon, Map<String, String>> getMultiPolygons() {
+    public List<OSMElement> getMultiPolygons() {
         return multiPolygons;
     }
 
-    public void addPoint(Point point, Map<String, String> tags) {
-        this.points.put(point, tags);
+    public void addPoint(Point point, long id, Map<String, String> tags, OsmMetadata metadata) {
+        this.points.add(new OSMElement(point, id, tags, metadata));
     }
 
-    public void addLineString(LineString lineString, Map<String, String> tags) {
-        this.lineStrings.put(lineString, tags);
+    public void addLineString(LineString lineString, long id, Map<String, String> tags, OsmMetadata metadata) {
+        this.lineStrings.add(new OSMElement(lineString, id, tags, metadata));
     }
 
-    public void addPolygon(Polygon polygon, Map<String, String> tags) {
-        this.polygons.put(polygon, tags);
+    public void addMultiLineString(MultiLineString multiLineString, long id, Map<String, String> tags, OsmMetadata metadata) {
+        this.lineStrings.add(new OSMElement(multiLineString, id, tags, metadata));
     }
 
-    public void addPolygon(MultiPolygon polygon, Map<String, String> tags) {
-        this.multiPolygons.put(polygon, tags);
+    public void addMultiPolygon(MultiPolygon multiPolygon, long id, Map<String, String> tags, OsmMetadata metadata) {
+        this.multiPolygons.add(new OSMElement(multiPolygon, id, tags, metadata));
     }
 
     public InMemoryMapDataSet loadData(OsmReader reader) throws IOException, OsmInputException {
@@ -99,8 +129,25 @@ public class OSMExtractor {
         return this.lineStrings.size();
     }
 
-    public int getPolygonsSize() {
+    public int getMultiLineStringsSize() {
+        return this.lineStrings.size();
+    }
+
+    public int getMultiPolygonsSize() {
         return this.multiPolygons.size();
+    }
+
+    public Point buildPoint(double lat, double lon) {
+        if (lat > 0.0d && lon > 0.0d) {
+            Coordinate coordinate = new Coordinate(lat, lon);
+            return geometryFactory.createPoint(coordinate);
+        } else {
+            return null;
+        }
+    }
+
+    public MultiLineString buildMultiLineString(LineString[] lineStrings) {
+        return geometryFactory.createMultiLineString(lineStrings);
     }
 
     public String getWKTRepresentation(Geometry g) {
@@ -115,6 +162,18 @@ public class OSMExtractor {
             if (lines.getLinearRing() != null && !lines.getLinearRing().isEmpty()) {
                 results.add(lines.getLinearRing());
             }
+        } catch (EntityNotFoundException e) {
+            // ignore
+        }
+        return results;
+    }
+
+    public List<LineString> getLines(OsmRelation relation) {
+        List<LineString> results = new ArrayList<>();
+
+        try {
+            RegionBuilderResult lines = regionBuilder.build(relation, data);
+            results.addAll(lines.getLineStrings());
         } catch (EntityNotFoundException e) {
             // ignore
         }
