@@ -186,8 +186,13 @@ GeoJSONExporterDialog.prototype._generateSelectElements = function () {
     var longitudeSel = $('<select>').appendTo('body');
     var wktSel = $("<select>").appendTo("body");
     latitudeSel.attr("id", "selectLatitude");
+    latitudeSel.css("width", "50%");
+
     longitudeSel.attr("id", "selectLongitude");
+    longitudeSel.css("width", "50%");
+
     wktSel.attr("id", "selectWKT");
+    wktSel.css("width", "50%");
 
 
     var previous;
